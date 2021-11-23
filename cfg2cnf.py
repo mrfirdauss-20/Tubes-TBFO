@@ -112,14 +112,15 @@ class Cfg2Cnf:
         # step 1: eliminate start symbol from RHS
 
         try:
-            for rule in self.prods[self.start_sym]:
-                if self.start_sym in rule:
-                    new_sym = f"{self.start_sym}0"
-                    new_prods = {new_sym: [[self.start_sym]]}
-                    new_prods.update(self.prods)
-                    self.prods = new_prods
-                    self.start_sym = new_sym
-                    raise
+            for sym in self.prods:
+                for rule in self.prods[sym]:
+                    if self.start_sym in rule:
+                        new_sym = f"{self.start_sym}0"
+                        new_prods = {new_sym: [[self.start_sym]]}
+                        new_prods.update(self.prods)
+                        self.prods = new_prods
+                        self.start_sym = new_sym
+                        raise
         except:
             pass
 
