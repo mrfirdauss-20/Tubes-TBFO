@@ -20,7 +20,7 @@ conversion =[
     (r'<=', 'LESS_THAN_OR_EQUAL'),
     (r'<', 'LESS_THAN'),
     (r">", "GREATER_THAN"),
-
+    (r'\n', 'NEWLINE'),
     #iteration
     (r'while\s', 'WHILE'),
     (r'while\(', 'WHILE'),
@@ -75,7 +75,6 @@ conversion =[
     (r'\".*\"', 'STRING'),
     (r'\'.*\'', 'STRING'),
     (r'[a-zA-Z_]\w*', 'VARIABLE'),
-    (r'\n', 'NEWLINE'),
     (r'\s', 'BLANK'),
     (r'\.', 'METHOD'),
     (r';', 'SEMICOLON'),
