@@ -7,6 +7,11 @@ Notes
 This file can be used as a script or as a package. The script section
 also serves as the class usage example.
 
+Important:
+    S -> ε (empty string) is assumed to be valid by default.
+    If there is a requirement to handle this differently,
+    do not use the script directly.
+
 Usage
 -----
     $ python cfg2cnf.py [infile] [outfile] [start_symbol]
@@ -42,6 +47,9 @@ class Cfg2Cnf:
     how the algorithm works. In general it only concerns efficiency.
     However if the productions are not in order there is no guarantee
     that conversion will produce correct results.
+
+    Conversion notes:
+        The CNF `S -> ε` is assumed to be valid by default
 
     Parameters
     ----------
