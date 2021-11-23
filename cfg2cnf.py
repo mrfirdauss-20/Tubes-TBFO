@@ -32,21 +32,9 @@ class Cfg2Cnf:
     This class assumes the CFG to be stored in a UTF-8 file in the
     form of::
 
-        Terminals:
-        < list of terminals separated by space >
-
-        Variables:
-        < list of non-terminals separated by space >
-
-        Productions:
         < list of productions separated by lines >
         < format: [symbol] -> [symbol] [symbol] ... | [symbol] ... >
-
-    The order of "Terminals", "Variables", and "Productions" sections
-    can be switched. However the order of list of productions affects
-    how the algorithm works. In general it only concerns efficiency.
-    However if the productions are not in order there is no guarantee
-    that conversion will produce correct results.
+        < terminal symbol denoted by ' ' >
 
     Conversion notes:
         The CNF `S -> ε` is assumed to be valid by default
@@ -80,8 +68,6 @@ class Cfg2Cnf:
     """
 
     prods: dict[list[list[str]]] = {}
-    terminals: list[str] = []
-    variables: list[str] = []
     start_sym: str
 
     def __init__(self, filename: str, start_sym: str) -> None:
@@ -97,23 +83,14 @@ class Cfg2Cnf:
         state = None
         with codecs.open(filename, encoding="utf-8") as f:
             for line in f:
-                line = line.strip()
-                if line == "Terminals:":
-                    state = "T"
-                elif line == "Variables:":
-                    state = "V"
-                elif line == "Productions:":
-                    state = "P"
-                elif state == "T":
-                    self._extend_unique(self.terminals, line.split())
-                elif state == "V":
-                    self._extend_unique(self.variables, line.split())
-                elif state == "P":
-                    if "->" in line:
-                        lhs, rhs = line.split("->", maxsplit=2)
-                        sym = lhs.strip()
-                        rules = [rule.split() for rule in rhs.split("|")]
+                if "->" in line:
+                    lhs, rhs = line.split("->", maxsplit=2)
+                    sym = lhs.strip()
+                    rules = [rule.split() for rule in rhs.split("|")]
+                    if sym not in self.prods:
                         self.prods[sym] = rules
+                    else:
+                        self._extend_unique(self.prods[sym])
 
         self.start_sym = start_sym
 
@@ -142,7 +119,6 @@ class Cfg2Cnf:
                     new_prods.update(self.prods)
                     self.prods = new_prods
                     self.start_sym = new_sym
-                    self.variables.insert(0, new_sym)
                     raise
         except:
             pass
@@ -213,7 +189,6 @@ class Cfg2Cnf:
                             else:
                                 new_sym = f"{sym}_T{counter}"
                                 new_terms[rule[i]] = new_sym
-                                self.variables.append(new_sym)
                                 counter += 1
                             rule[i] = new_sym
 
@@ -238,7 +213,6 @@ class Cfg2Cnf:
 
                 del rule[1:]
                 rule.append(new_sym)
-                self.variables.append(new_sym)
 
                 if len(plus_prod) > 2:
                     plus_prods.append(plus_prod)
@@ -264,12 +238,6 @@ class Cfg2Cnf:
         None
         """
         with codecs.open(filename, mode="w", encoding="utf-8") as f:
-            if complete:
-                f.write("Terminals:\n")
-                f.write(" ".join(self.terminals))
-                f.write("\nVariables:\n")
-                f.write(" ".join(self.variables))
-                f.write("\nProductions:\n")
             for sym, rules in self.prods.items():
                 prods_str = map(lambda p: " ".join(p), rules)
                 f.write(f"{sym} -> {' | '.join(prods_str)}\n")
@@ -368,14 +336,6 @@ class Cfg2Cnf:
                     if self._is_terminal(rule_sym) and rule_sym not in terms:
                         dels.append(rule_sym)
 
-        for sym in self.terminals:
-            if sym not in terms:
-                dels.append(sym)
-
-        for sym in self.variables:
-            if sym not in vrbls:
-                dels.append(sym)
-
         self._delete_symbols(dels)
 
         # unterminable productions:
@@ -458,10 +418,6 @@ class Cfg2Cnf:
         for sym in syms:
             if sym in self.prods:
                 del self.prods[sym]
-            if sym in self.variables:
-                self.variables.remove(sym)
-            elif sym in self.terminals:
-                self.terminals.remove(sym)
 
     def _traverse(self, sym: str, terms: list[str], vrbls: list[str]) -> None:
         """Traverse the grammar starting from a specified production
@@ -483,17 +439,9 @@ class Cfg2Cnf:
         """
         for rule in self.prods[sym]:
             for rule_sym in rule:
-                if (
-                    self._is_terminal(rule_sym)
-                    and rule_sym not in terms
-                    and rule_sym in self.terminals
-                ):
+                if self._is_terminal(rule_sym) and rule_sym not in terms:
                     terms.append(rule_sym)
-                elif (
-                    not self._is_terminal(rule_sym)
-                    and rule_sym not in vrbls
-                    and rule_sym in self.variables
-                ):
+                elif not self._is_terminal(rule_sym) and rule_sym not in vrbls:
                     vrbls.append(rule_sym)
                     self._traverse(rule_sym, terms, vrbls)
 
@@ -525,7 +473,7 @@ class Cfg2Cnf:
         return False
 
     def _is_terminal(self, sym: str) -> bool:
-        return sym in self.terminals
+        return sym[0] == "'" and sym[-1] == "'"
 
     def _extend_unique(self, lst: list[S], ext: list[S]) -> None:
         for val in ext:
