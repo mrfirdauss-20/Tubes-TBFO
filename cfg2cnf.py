@@ -80,7 +80,6 @@ class Cfg2Cnf:
         start_sym: str
             The start symbol of the grammar
         """
-        state = None
         with codecs.open(filename, encoding="utf-8") as f:
             for line in f:
                 if "->" in line:
@@ -139,6 +138,8 @@ class Cfg2Cnf:
 
             for rule in self.prods[sym]:
                 self._extend_unique(self.prods[sym], self._replace_nullable(rule, sym))
+            self._remove_all(self.prods[sym], ["ε"])
+            self._remove_all(null_prods, sym)
 
             # replace for other productions
 
@@ -150,6 +151,8 @@ class Cfg2Cnf:
                         )
                     if ["ε"] in self.prods[other]:
                         null_prods.insert(0, other)
+                    elif other in null_prods:
+                        self._remove_all(null_prods, other)
 
         # step 2b: remove unit productions
 
@@ -163,12 +166,12 @@ class Cfg2Cnf:
             sym, unit_sym = unit_prods.pop()
             if unit_sym in self.prods:
                 if [unit_sym] in self.prods[sym]:
-                    self.prods[sym].remove([unit_sym])
+                    self._remove_all(self.prods[sym], [unit_sym])
                 if unit_sym != sym:
                     for rule in self.prods[unit_sym]:
                         if len(rule) > 1 or self._is_terminal(rule[0]):
                             self._extend_unique(self.prods[sym], [rule])
-                        else:
+                        elif rule[0] != unit_sym:
                             unit_prods.append([sym, rule[0]])
 
         # step 2c: remove useless productions
@@ -224,7 +227,7 @@ class Cfg2Cnf:
         if len(self.prods) == 1 and len(self.prods[self.start_sym]) == 0:
             self.prods[self.start_sym] = ["ε"]
 
-    def write(self, filename: str, complete: bool = True) -> None:
+    def write(self, filename: str) -> None:
         """Write the grammar (converted or not) to a file.
 
         Parameters
@@ -384,7 +387,7 @@ class Cfg2Cnf:
 
         if self.start_sym in unterminables:
             # will be true if and only if cnf is in form of S -> ε
-            unterminables.remove(self.start_sym)
+            self._remove_all(unterminables, self.start_sym)
 
         self._delete_symbols(unterminables)
 
@@ -486,6 +489,13 @@ class Cfg2Cnf:
         if val not in lst:
             lst.append(val)
 
+    def _remove_all(self, lst: list[S], val: S) -> None:
+        try:
+            while True:
+                lst.remove(val)
+        except ValueError:
+            pass
+
 
 if __name__ == "__main__":
     import argparse
@@ -495,14 +505,13 @@ if __name__ == "__main__":
     parser.add_argument("infile")
     parser.add_argument("outfile")
     parser.add_argument("start_symbol")
-    parser.add_argument("--complete", action=argparse.BooleanOptionalAction)
 
     args = parser.parse_args()
     t1 = time.perf_counter()
 
     converter = Cfg2Cnf(args.infile, args.start_symbol)
     converter.convert()
-    converter.write(args.outfile, args.complete)
+    converter.write(args.outfile)
 
     t2 = time.perf_counter()
     print(f"Done in {t2 - t1}s", end="\n\n")
