@@ -334,6 +334,7 @@ class Cfg2Cnf:
 
 if __name__ == "__main__":
     import argparse
+    import time
 
     parser = argparse.ArgumentParser()
     parser.add_argument("infile")
@@ -341,13 +342,11 @@ if __name__ == "__main__":
     parser.add_argument("start_symbol")
 
     args = parser.parse_args()
+    t1 = time.perf_counter()
 
     converter = Cfg2Cnf(args.infile, args.start_symbol)
     converter.convert()
-
-    for sym, rules in converter.prods.items():
-        prods_str = map(lambda p: " ".join(p), rules)
-        print(f"{sym} -> {' | '.join(prods_str)}")
-    print("")
-
     converter.write(args.outfile)
+
+    t2 = time.perf_counter()
+    print(f"Done in {t2 - t1}s", end="\n\n")
