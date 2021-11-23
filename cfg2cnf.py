@@ -204,27 +204,27 @@ class Cfg2Cnf:
 
         # traverse from start symbol, obtain stack
 
-        vrbls = []
         terms = []
-        self.__traverse(self.start_sym, vrbls, terms)
+        vrbls = [self.start_sym]
+        self.__traverse(self.start_sym, terms, vrbls)
 
         # delete items not in stack (unreachable)
 
         dels = []
         for sym in self.prods:
-            if sym != self.start_sym and sym not in vrbls:
+            if sym not in vrbls:
                 dels.append(sym)
             for rule in self.prods[sym]:
                 for rule_sym in rule:
                     if self.is_terminal(rule_sym) and rule_sym not in terms:
                         dels.append(rule_sym)
 
-        for sym in self.variables:
-            if sym != self.start_sym and sym not in vrbls:
-                dels.append(sym)
-
         for sym in self.terminals:
             if sym not in terms:
+                dels.append(sym)
+
+        for sym in self.variables:
+            if sym not in vrbls:
                 dels.append(sym)
 
         self.__delete_rules(dels)
@@ -299,7 +299,7 @@ class Cfg2Cnf:
             elif sym in self.terminals:
                 self.terminals.remove(sym)
 
-    def __traverse(self, sym: str, vrbls: list[str], terms: list[str]) -> None:
+    def __traverse(self, sym: str, terms: list[str], vrbls: list[str]) -> None:
         for rule in self.prods[sym]:
             for rule_sym in rule:
                 if (
@@ -314,7 +314,7 @@ class Cfg2Cnf:
                     and rule_sym in self.variables
                 ):
                     vrbls.append(rule_sym)
-                    self.__traverse(rule_sym, vrbls, terms)
+                    self.__traverse(rule_sym, terms, vrbls)
 
     def __extend_unique(self, lst: list[S], ext: list[S]) -> None:
         for val in ext:
