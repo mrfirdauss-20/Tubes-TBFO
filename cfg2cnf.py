@@ -53,6 +53,7 @@ class Cfg2Cnf:
                     new_prods.update(self.prods)
                     self.prods = new_prods
                     self.start_sym = new_sym
+                    self.variables.insert(0, new_sym)
                     raise
         except:
             pass
@@ -125,6 +126,7 @@ class Cfg2Cnf:
                             else:
                                 new_sym = f"{sym}_T{counter}"
                                 new_terms[rule[i]] = new_sym
+                                self.variables.append(new_sym)
                                 counter += 1
                             rule[i] = new_sym
 
@@ -141,13 +143,15 @@ class Cfg2Cnf:
             counter = 1
             while plus_prods:
                 rule = plus_prods.pop()
-
                 plus_prod = rule[1:]
+
                 new_sym = f"{sym}_S{counter}"
                 new_prods[new_sym] = [plus_prod]
+                counter += 1
+
                 del rule[1:]
                 rule.append(new_sym)
-                counter += 1
+                self.variables.append(new_sym)
 
                 if len(plus_prod) > 2:
                     plus_prods.append(plus_prod)
