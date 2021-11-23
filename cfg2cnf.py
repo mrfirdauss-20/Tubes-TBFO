@@ -25,7 +25,7 @@ class Cfg2Cnf:
     Notes
     -----
     This class assumes the CFG to be stored in a UTF-8 file in the
-    form of
+    form of::
 
         Terminals:
         < list of terminals separated by space >
@@ -67,7 +67,7 @@ class Cfg2Cnf:
     -------
     convert()
         Main method to convert CFG to CNF
-    write(filename: str, complete: bool = True)
+    write(filename, complete=True)
         Write the grammar to a file
     """
 
