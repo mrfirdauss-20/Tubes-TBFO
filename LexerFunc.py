@@ -76,7 +76,11 @@ def startToken(inputFile):
         print("Error when lexing file")
     
     #print(output)
-    return output
+    tes=[]
+    i=output.split(' ')
+    i = [string for string in i if string !='']
+
+    return i
 
 
     

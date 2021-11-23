@@ -76,9 +76,11 @@ conversion =[
     (r'\'.*\'', 'STR'),
     (r'[a-zA-Z_]\w*', 'VAR'),
     (r'\s', 'BLANK'),
+    (r'\,', 'COMMA'),
     (r'\.', 'METHOD'),
     (r';', 'SEMICOLON'),
     (r':', 'COLON'),
     (r'\#.', 'COMMENT'),
-    (r'\w', 'NULL')
+    (r'\w', 'NULL'),
+        (r"\S", "UNDEF")
 ]
