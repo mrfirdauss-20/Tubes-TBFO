@@ -313,7 +313,16 @@ class Cfg2Cnf:
 
 
 if __name__ == "__main__":
-    converter = Cfg2Cnf("test3.txt", "S")
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("infile")
+    parser.add_argument("outfile")
+    parser.add_argument("start_symbol")
+
+    args = parser.parse_args()
+
+    converter = Cfg2Cnf(args.infile, args.start_symbol)
     converter.convert()
 
     for sym, rules in converter.prods.items():
