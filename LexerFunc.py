@@ -63,7 +63,7 @@ def startToken(inputFile):
 
     f = open(filePath,'r')
     text = f.read()
-    print(text)
+    #print(text)
     reString, nonTerDict = initRules (lexRules.conversion)
     output=''
     idx=0

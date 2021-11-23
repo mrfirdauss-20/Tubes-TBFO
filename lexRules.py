@@ -72,9 +72,9 @@ conversion =[
     #DATA_TYPE
     (r'\d+', 'INT'),
     (r'\d+\.\d+', 'FLOAT'),
-    (r'\".*\"', 'STRING'),
-    (r'\'.*\'', 'STRING'),
-    (r'[a-zA-Z_]\w*', 'VARIABLE'),
+    (r'\".*\"', 'STR'),
+    (r'\'.*\'', 'STR'),
+    (r'[a-zA-Z_]\w*', 'VAR'),
     (r'\s', 'BLANK'),
     (r'\.', 'METHOD'),
     (r';', 'SEMICOLON'),
