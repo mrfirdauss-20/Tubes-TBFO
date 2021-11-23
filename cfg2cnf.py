@@ -90,7 +90,7 @@ class Cfg2Cnf:
                     if sym not in self.prods:
                         self.prods[sym] = rules
                     else:
-                        self._extend_unique(self.prods[sym])
+                        self._extend_unique(self.prods[sym], rules)
 
         self.start_sym = start_sym
 
@@ -162,7 +162,8 @@ class Cfg2Cnf:
         while unit_prods:
             sym, unit_sym = unit_prods.pop()
             if unit_sym in self.prods:
-                self.prods[sym].remove([unit_sym])
+                if [unit_sym] in self.prods[sym]:
+                    self.prods[sym].remove([unit_sym])
                 if unit_sym != sym:
                     for rule in self.prods[unit_sym]:
                         if len(rule) > 1 or self._is_terminal(rule[0]):
