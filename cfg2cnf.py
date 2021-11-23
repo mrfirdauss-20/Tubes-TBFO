@@ -153,6 +153,18 @@ class Cfg2Cnf:
 
         self.prods.update(new_prods)
 
+    def write(self, filename: str):
+        with codecs.open(filename, mode="w", encoding="utf-8") as f:
+            f.write("Terminals:\n")
+            f.write(" ".join(self.terminals))
+            f.write("\nVariables:\n")
+            f.write(" ".join(self.variables))
+            f.write("\nProductions:\n")
+            for sym, rules in self.prods.items():
+                prods_str = map(lambda p: " ".join(p), rules)
+                f.write(f"{sym} -> {' | '.join(prods_str)}\n")
+            f.write("\n")
+
     def __split_rule(self, rule: list[str]) -> tuple[list[str], list[str]]:
         terms = []
         vrbls = []
@@ -202,6 +214,10 @@ class Cfg2Cnf:
                 for rule_sym in rule:
                     if self.is_terminal(rule_sym) and rule_sym not in terms:
                         dels.append(rule_sym)
+
+        for sym in self.terminals:
+            if sym not in terms:
+                dels.append(sym)
 
         self.__delete_rules(dels)
 
@@ -270,6 +286,10 @@ class Cfg2Cnf:
         for sym in syms:
             if sym in self.prods:
                 del self.prods[sym]
+            if sym in self.variables:
+                self.variables.remove(sym)
+            elif sym in self.terminals:
+                self.terminals.remove(sym)
 
     def __traverse(self, sym: str, vrbls: list[str], terms: list[str]):
         for rule in self.prods[sym]:
@@ -329,3 +349,5 @@ if __name__ == "__main__":
         prods_str = map(lambda p: " ".join(p), rules)
         print(f"{sym} -> {' | '.join(prods_str)}")
     print("")
+
+    converter.write(args.outfile)
