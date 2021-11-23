@@ -158,13 +158,14 @@ class Cfg2Cnf:
 
         self.prods.update(new_prods)
 
-    def write(self, filename: str) -> None:
+    def write(self, filename: str, complete: bool = False) -> None:
         with codecs.open(filename, mode="w", encoding="utf-8") as f:
-            f.write("Terminals:\n")
-            f.write(" ".join(self.terminals))
-            f.write("\nVariables:\n")
-            f.write(" ".join(self.variables))
-            f.write("\nProductions:\n")
+            if complete:
+                f.write("Terminals:\n")
+                f.write(" ".join(self.terminals))
+                f.write("\nVariables:\n")
+                f.write(" ".join(self.variables))
+                f.write("\nProductions:\n")
             for sym, rules in self.prods.items():
                 prods_str = map(lambda p: " ".join(p), rules)
                 f.write(f"{sym} -> {' | '.join(prods_str)}\n")
@@ -348,13 +349,14 @@ if __name__ == "__main__":
     parser.add_argument("infile")
     parser.add_argument("outfile")
     parser.add_argument("start_symbol")
+    parser.add_argument("--complete", action=argparse.BooleanOptionalAction)
 
     args = parser.parse_args()
     t1 = time.perf_counter()
 
     converter = Cfg2Cnf(args.infile, args.start_symbol)
     converter.convert()
-    converter.write(args.outfile)
+    converter.write(args.outfile, args.complete)
 
     t2 = time.perf_counter()
     print(f"Done in {t2 - t1}s", end="\n\n")
