@@ -1,286 +1,322 @@
 # File      : cfg2cnf.py
 # Author    : Hilya Fadhilah Imania
 # Created   : 2021/11/21
-# Version   : 0.0.1
+# Version   : 0.0.2
 import codecs
 from typing import TypeVar
 
-def cfgToCnf(filename: str, start_sym: str):
+S = TypeVar("S")
 
-    # read file, put raw rules to dict
 
-    prods = {}
-    with codecs.open(filename, encoding='utf-8') as f:
-        for line in f:
-            lhs, rhs = line.split('->', maxsplit=2)
-            sym = lhs.strip()
-            rules = [rule.split() for rule in rhs.split('|')]
-            prods[sym] = rules
+class Cfg2Cnf:
+    prods: dict[list[str]] = {}
+    terminals: list[str] = []
+    variables: list[str] = []
+    start_sym: str
 
-    print_prods(prods)
+    def __init__(self, filename: str, start_sym: str) -> None:
+        state = None
+        with codecs.open(filename, encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line == "Terminals:":
+                    state = "T"
+                elif line == "Variables:":
+                    state = "V"
+                elif line == "Productions:":
+                    state = "P"
+                elif state == "T":
+                    self.__extend_unique(self.terminals, line.split())
+                elif state == "V":
+                    self.__extend_unique(self.variables, line.split())
+                elif state == "P":
+                    if "->" in line:
+                        lhs, rhs = line.split("->", maxsplit=2)
+                        sym = lhs.strip()
+                        rules = [rule.split() for rule in rhs.split("|")]
+                        self.prods[sym] = rules
 
-    # step 1: eliminate start symbol from RHS
+        self.start_sym = start_sym
 
-    try:
-        for rule in prods[start_sym]:
-            if start_sym in rule:
-                new_sym = f"{start_sym}0"
-                new_prods = { new_sym: [[start_sym]] }
-                new_prods.update(prods)
-                prods = new_prods
-                start_sym = new_sym
-                raise
-    except:
-        pass
+    def is_terminal(self, sym):
+        return sym in self.terminals
 
-    # step 2a: remove null productions
+    def convert(self):
 
-    null_prods = []
-    for sym in prods:
-        if ['ε'] in prods[sym]:
-            print(sym)
-            null_prods.append(sym)
+        # step 1: eliminate start symbol from RHS
 
-    while null_prods:
-        sym = null_prods.pop(0)
-        prods[sym].remove(['ε'])
+        try:
+            for rule in self.prods[self.start_sym]:
+                if self.start_sym in rule:
+                    new_sym = f"{self.start_sym}0"
+                    new_prods = {new_sym: [[self.start_sym]]}
+                    new_prods.update(self.prods)
+                    self.prods = new_prods
+                    self.start_sym = new_sym
+                    raise
+        except:
+            pass
 
-        # replace for this production first
+        # step 2a: remove null productions
 
-        for rule in prods[sym]:
-            extend_unique(prods[sym], replace_nullable(sym, rule))
+        null_prods = []
+        for sym in self.prods:
+            if ["ε"] in self.prods[sym]:
+                null_prods.append(sym)
 
-        # replace for other productions
+        while null_prods:
+            sym = null_prods.pop(0)
+            self.prods[sym].remove(["ε"])
 
-        for other in prods:
-            if other != sym:
-                for rule in prods[other]:
-                    extend_unique(prods[other], replace_nullable(sym, rule))
-                if ['ε'] in prods[other]:
-                    null_prods.insert(0, other)
+            # replace for this production first
 
-    print_prods(prods)
+            for rule in self.prods[sym]:
+                self.__extend_unique(
+                    self.prods[sym], self.__replace_nullable(rule, sym)
+                )
 
-    # step 2b: remove unit productions
+            # replace for other productions
 
-    unit_prods = []
-    for sym in prods:
-        for rule in prods[sym]:
-            if len(rule) == 1 and not is_terminal(rule[0]):
-                unit_prods.append((sym, rule[0]))
+            for other in self.prods:
+                if other != sym:
+                    for rule in self.prods[other]:
+                        self.__extend_unique(
+                            self.prods[other], self.__replace_nullable(rule, sym)
+                        )
+                    if ["ε"] in self.prods[other]:
+                        null_prods.insert(0, other)
 
-    while unit_prods:
-        sym, unit_sym = unit_prods.pop()
-        if unit_sym in prods:
-            prods[sym].remove([unit_sym])
-            if unit_sym != sym:
-                for rule in prods[unit_sym]:
-                    if len(rule) > 1 or is_terminal(rule[0]):
-                        extend_unique(prods[sym], [rule])
-                    else:
-                        unit_prods.append([sym, rule[0]])
+        # step 2b: remove unit productions
 
-    print_prods(prods)
+        unit_prods = []
+        for sym in self.prods:
+            for rule in self.prods[sym]:
+                if len(rule) == 1 and not self.is_terminal(rule[0]):
+                    unit_prods.append((sym, rule[0]))
 
-    # step 2c: remove useless productions
-
-    remove_useless(prods, start_sym)
-    print_prods(prods)
-
-    # step 3: decompose terminals
-
-    new_prods = {}
-    for sym in prods:
-        counter = 1
-        new_terms = {}
-        for rule in prods[sym]:
-            terms, syms = split_rule(rule)
-            if (terms and syms) or (len(terms) > 1):
-                for i in range(len(rule)):
-                    if is_terminal(rule[i]):
-                        if rule[i] in new_terms:
-                            new_sym = new_terms[rule[i]]
+        while unit_prods:
+            sym, unit_sym = unit_prods.pop()
+            if unit_sym in self.prods:
+                self.prods[sym].remove([unit_sym])
+                if unit_sym != sym:
+                    for rule in self.prods[unit_sym]:
+                        if len(rule) > 1 or self.is_terminal(rule[0]):
+                            self.__extend_unique(self.prods[sym], [rule])
                         else:
-                            new_sym = f'{sym}_T{counter}'
-                            new_terms[rule[i]] = new_sym
-                            counter += 1
-                        rule[i] = new_sym
+                            unit_prods.append([sym, rule[0]])
 
-        for term, new_sym in new_terms.items():
-            new_prods[new_sym] = [[term]]
+        # step 2c: remove useless productions
 
-    # step 4: decompose symbols
+        self.__remove_useless()
 
-        plus_prods = []
-        for rule in prods[sym]:
-            if len(rule) > 2:
-                plus_prods.append(rule)
+        # step 3: decompose terminals
 
-        while plus_prods:
-            rule = plus_prods.pop()
+        new_prods = {}
+        for sym in self.prods:
+            counter = 1
+            new_terms = {}
+            for rule in self.prods[sym]:
+                terms, vrbls = self.__split_rule(rule)
+                if (terms and vrbls) or (len(terms) > 1):
+                    for i in range(len(rule)):
+                        if self.is_terminal(rule[i]):
+                            if rule[i] in new_terms:
+                                new_sym = new_terms[rule[i]]
+                            else:
+                                new_sym = f"{sym}_T{counter}"
+                                new_terms[rule[i]] = new_sym
+                                counter += 1
+                            rule[i] = new_sym
 
-            plus_prod = rule[1:]
-            new_sym = f'{sym}_S{counter}'
-            new_prods[new_sym] = [plus_prod]
-            del rule[1:]
-            rule.append(new_sym)
-            counter += 1
+            for term, new_sym in new_terms.items():
+                new_prods[new_sym] = [[term]]
 
-            if len(plus_prod) > 2:
-                plus_prods.append(plus_prod)
+            # step 4: decompose symbols
 
-    prods.update(new_prods)
-    print_prods(prods)
+            plus_prods = []
+            for rule in self.prods[sym]:
+                if len(rule) > 2:
+                    plus_prods.append(rule)
 
-    return prods, start_sym
+            while plus_prods:
+                rule = plus_prods.pop()
 
-def replace_nullable(null_sym: str, prod: list[str], start: int = 0) -> list[str]:
-    result = []
-    length = len(prod)
+                plus_prod = rule[1:]
+                new_sym = f"{sym}_S{counter}"
+                new_prods[new_sym] = [plus_prod]
+                del rule[1:]
+                rule.append(new_sym)
+                counter += 1
 
-    for i in range(start, length):
-        if prod[i] == null_sym:
-            new_rule = prod[:i] + prod[i+1:]
+                if len(plus_prod) > 2:
+                    plus_prods.append(plus_prod)
 
-            if len(new_rule) == 0:
-                append_unique(result, ['ε'])
+        self.prods.update(new_prods)
+
+    def __split_rule(self, rule: list[str]) -> tuple[list[str], list[str]]:
+        terms = []
+        vrbls = []
+        for sym in rule:
+            if self.is_terminal(sym):
+                terms.append(sym)
             else:
-                append_unique(result, new_rule)
+                vrbls.append(sym)
+        return terms, vrbls
 
-            rec = replace_nullable(null_sym, new_rule, i)
-            for new_rule in rec:
-                append_unique(result, new_rule)
+    def __replace_nullable(
+        self, prod: list[str], null_sym: str, start: int = 0
+    ) -> list[str]:
+        result = []
+        length = len(prod)
 
-    return result
+        for i in range(start, length):
+            if prod[i] == null_sym:
+                new_rule = prod[:i] + prod[i + 1 :]
 
-def remove_useless(prods: dict[list[str]], start_sym: str):
-    
-    # traverse from start symbol, obtain stack
+                if len(new_rule) == 0:
+                    self.__append_unique(result, ["ε"])
+                else:
+                    self.__append_unique(result, new_rule)
 
-    stack = []
-    traverse(prods, start_sym, stack)
+                rec = self.__replace_nullable(new_rule, null_sym, i)
+                for new_rule in rec:
+                    self.__append_unique(result, new_rule)
 
-    # delete items not in stack (unreachable)
+        return result
 
-    dels = []
-    for sym in prods:
-        if sym != start_sym and sym not in stack:
-            dels.append(sym)
+    def __remove_useless(self):
 
-    for sym in dels:
-        del prods[sym]
+        # traverse from start symbol, obtain stack
 
-    # unterminable productions:
-    # initialize obviously terminable productions
+        vrbls = []
+        terms = []
+        self.__traverse(self.start_sym, vrbls, terms)
 
-    terminables = []
-    unterminables = []
-    for sym in prods:
-        can_terminate = False
-        for rule in prods[sym]:
-            _, syms = split_rule(rule)
-            if not syms:
-                can_terminate = True
-                break
-        if can_terminate:
-            terminables.append(sym)
-        else:
-            unterminables.append(sym)
+        # delete items not in stack (unreachable)
 
-    # unterminable might be actually terminable, check
-    # using "queue", unterminable goes back to the end of line
-    # until it's indefinitely repeating
+        dels = []
+        for sym in self.prods:
+            if sym != self.start_sym and sym not in vrbls:
+                dels.append(sym)
+            for rule in self.prods[sym]:
+                for rule_sym in rule:
+                    if self.is_terminal(rule_sym) and rule_sym not in terms:
+                        dels.append(rule_sym)
 
-    stack = []
-    while unterminables:
-        sym = unterminables.pop()
-        can_terminate = False
-        for rule in prods[sym]:
-            for rule_sym in rule:
-                if rule_sym in terminables:
+        self.__delete_rules(dels)
+
+        # unterminable productions:
+        # initialize obviously terminable productions
+
+        terminables = []
+        unterminables = []
+        for sym in self.prods:
+            can_terminate = False
+            for rule in self.prods[sym]:
+                _, vrbls = self.__split_rule(rule)
+                if not vrbls:
                     can_terminate = True
                     break
             if can_terminate:
+                terminables.append(sym)
+            else:
+                unterminables.append(sym)
+
+        # unterminable might be actually terminable, check
+        # using "queue", unterminable goes back to the end of line
+        # until it's indefinitely repeating
+
+        stack = []
+        while unterminables:
+            sym = unterminables.pop()
+            can_terminate = False
+            for rule in self.prods[sym]:
+                for rule_sym in rule:
+                    if rule_sym in terminables:
+                        can_terminate = True
+                        break
+                if can_terminate:
+                    break
+
+            if can_terminate:
+                terminables.append(sym)
+            else:
+                unterminables.insert(0, sym)
+                stack.append(sym)
+
+            if self.__is_repeating(stack):
                 break
 
-        if can_terminate:
-            terminables.append(sym)
-        else:
-            unterminables.insert(0, sym)
-            stack.append(sym)
+        self.__delete_rules(unterminables)
 
-        if is_repeating(stack):
-            break
+    def __delete_rules(self, syms: list[str]):
 
-    # delete rules with unterminable symbol
+        # delete rules
 
-    for sym in prods:
-        rules = []
-        for rule in prods[sym]:
-            can_terminate = True
+        for sym in self.prods:
+            rules = []
+            for rule in self.prods[sym]:
+                can_terminate = True
+                for rule_sym in rule:
+                    if rule_sym in syms:
+                        can_terminate = False
+                        break
+                if can_terminate:
+                    rules.append(rule)
+            self.prods[sym] = rules
+
+        # delete productions
+
+        for sym in syms:
+            if sym in self.prods:
+                del self.prods[sym]
+
+    def __traverse(self, sym: str, vrbls: list[str], terms: list[str]):
+        for rule in self.prods[sym]:
             for rule_sym in rule:
-                if not is_terminal(rule_sym) and rule_sym in unterminables:
-                    can_terminate = False
-                    break
-            if can_terminate:
-                rules.append(rule)
-        prods[sym] = rules
+                if (
+                    self.is_terminal(rule_sym)
+                    and rule_sym not in terms
+                    and rule_sym in self.terminals
+                ):
+                    terms.append(rule_sym)
+                elif (
+                    not self.is_terminal(rule_sym)
+                    and rule_sym not in vrbls
+                    and rule_sym in self.variables
+                ):
+                    vrbls.append(rule_sym)
+                    self.__traverse(rule_sym, vrbls, terms)
 
-    # delete unterminable productions
+    def __extend_unique(self, lst: list[S], ext: list[S]):
+        for val in ext:
+            if val not in lst:
+                lst.append(val)
 
-    for sym in unterminables:
-        del prods[sym]
-
-def traverse(prods: dict[list[str]], sym: str, stack: list[str]):
-    for rule in prods[sym]:
-        for rule_sym in rule:
-            if not is_terminal(rule_sym) and rule_sym not in stack:
-                stack.append(rule_sym)
-                traverse(prods, rule_sym, stack)
-
-S = TypeVar('S')
-
-def is_repeating(visited: list[S]) -> bool:
-    unrepeated = []
-    for i in range(len(visited)):
-        try:
-            j = -1 
-            while True:
-                j = unrepeated.index(visited[i], j + 1)
-                if visited[i+1] == unrepeated[j+1]:
-                    return True
-        except:
-            pass
-        unrepeated.append(visited[i])
-    return False
-
-def extend_unique(lst: list[S], ext: list[S]):
-    for val in ext:
+    def __append_unique(self, lst: list[S], val: S):
         if val not in lst:
             lst.append(val)
 
-def append_unique(lst: list[S], val: S):
-    if val not in lst:
-        lst.append(val)
+    def __is_repeating(self, visited: list[S]) -> bool:
+        unrepeated = []
+        for i in range(len(visited)):
+            try:
+                j = -1
+                while True:
+                    j = unrepeated.index(visited[i], j + 1)
+                    if visited[i + 1] == unrepeated[j + 1]:
+                        return True
+            except:
+                pass
+            unrepeated.append(visited[i])
+        return False
 
-def is_terminal(sym: str) -> bool:
-    return sym[0] == "'" and sym[-1] == "'"
 
-def split_rule(rule: list[str]) -> tuple[list[str], list[str]]:
-    terms = []
-    syms = []
-    for sym in rule:
-        if is_terminal(sym):
-            terms.append(sym)
-        else:
-            syms.append(sym)
-    return terms, syms
+if __name__ == "__main__":
+    converter = Cfg2Cnf("test3.txt", "S")
+    converter.convert()
 
-def print_prods(rules):
-    for sym in rules:
-        prods_str = map(lambda p: ' '.join(p), rules[sym])
+    for sym, rules in converter.prods.items():
+        prods_str = map(lambda p: " ".join(p), rules)
         print(f"{sym} -> {' | '.join(prods_str)}")
-    print('')
-
-if __name__ == '__main__':
-    cfgToCnf('test2.txt', 'S')
+    print("")
