@@ -25,6 +25,7 @@ def getCNF(pathCFG):
         #iterasi setiap item di RHS dan memetakan kemunculannya ada di LHS mana
         for item in range(lengthRHS):
             value = CNF.get(rhs[item])
+            value = [i for i in value if i!='\'']
             #jika belum pernah muncul, maka buat key baru
             if (value == None):
                 CNF.update({rhs[item]: [lhs]})
