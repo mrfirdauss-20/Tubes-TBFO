@@ -138,6 +138,7 @@ class Cfg2Cnf:
                 if len(rule) > 2:
                     plus_prods.append(rule)
 
+            counter = 1
             while plus_prods:
                 rule = plus_prods.pop()
 
@@ -214,9 +215,13 @@ class Cfg2Cnf:
                     if self.is_terminal(rule_sym) and rule_sym not in terms:
                         dels.append(rule_sym)
 
+        for sym in self.variables:
+            if sym not in vrbls:
+                dels.append(sym)
+
         for sym in self.terminals:
             if sym not in terms:
-                self.terminals.remove(sym)
+                dels.append(sym)
 
         self.__delete_rules(dels)
 
