@@ -158,7 +158,7 @@ class Cfg2Cnf:
 
         self.prods.update(new_prods)
 
-    def write(self, filename: str, complete: bool = False) -> None:
+    def write(self, filename: str, complete: bool = True) -> None:
         with codecs.open(filename, mode="w", encoding="utf-8") as f:
             if complete:
                 f.write("Terminals:\n")
