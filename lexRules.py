@@ -23,6 +23,7 @@ conversion = [
     (r";", "semi"),
     (r":", "colon"),
     (r"\#.", "sharp"),
+    (r"->", "rarrow"),
     (r"\n", "nl"),
     # iteration
     (r"while\s", "while"),
