@@ -38,10 +38,10 @@ class Cfg2Cnf:
 
         self.start_sym = start_sym
 
-    def is_terminal(self, sym):
+    def is_terminal(self, sym) -> bool:
         return sym in self.terminals
 
-    def convert(self):
+    def convert(self) -> None:
 
         # step 1: eliminate start symbol from RHS
 
@@ -153,7 +153,7 @@ class Cfg2Cnf:
 
         self.prods.update(new_prods)
 
-    def write(self, filename: str):
+    def write(self, filename: str) -> None:
         with codecs.open(filename, mode="w", encoding="utf-8") as f:
             f.write("Terminals:\n")
             f.write(" ".join(self.terminals))
@@ -196,7 +196,7 @@ class Cfg2Cnf:
 
         return result
 
-    def __remove_useless(self):
+    def __remove_useless(self) -> None:
 
         # traverse from start symbol, obtain stack
 
@@ -217,7 +217,7 @@ class Cfg2Cnf:
 
         for sym in self.terminals:
             if sym not in terms:
-                dels.append(sym)
+                self.terminals.remove(sym)
 
         self.__delete_rules(dels)
 
@@ -265,7 +265,7 @@ class Cfg2Cnf:
 
         self.__delete_rules(unterminables)
 
-    def __delete_rules(self, syms: list[str]):
+    def __delete_rules(self, syms: list[str]) -> None:
 
         # delete rules
 
@@ -291,7 +291,7 @@ class Cfg2Cnf:
             elif sym in self.terminals:
                 self.terminals.remove(sym)
 
-    def __traverse(self, sym: str, vrbls: list[str], terms: list[str]):
+    def __traverse(self, sym: str, vrbls: list[str], terms: list[str]) -> None:
         for rule in self.prods[sym]:
             for rule_sym in rule:
                 if (
@@ -308,12 +308,12 @@ class Cfg2Cnf:
                     vrbls.append(rule_sym)
                     self.__traverse(rule_sym, vrbls, terms)
 
-    def __extend_unique(self, lst: list[S], ext: list[S]):
+    def __extend_unique(self, lst: list[S], ext: list[S]) -> None:
         for val in ext:
             if val not in lst:
                 lst.append(val)
 
-    def __append_unique(self, lst: list[S], val: S):
+    def __append_unique(self, lst: list[S], val: S) -> None:
         if val not in lst:
             lst.append(val)
 
