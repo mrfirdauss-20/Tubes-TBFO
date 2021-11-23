@@ -31,16 +31,21 @@ def getCNF(pathCFG):
             #jika sudah pernah muncul, maka tambahkan LHS kemunculan item dari RHS
             else:
                 CNF[rhs[item]].append(lhs)
+    print(CNF)
 
 def cykParser(input):
     inputLength = len(input)
+    print(inputLength)
     #inisialisasi pada tabel CYK
     table = [[[] for j in range(i)] for i in range((inputLength), 0, -1)]
+    print(table)
     #mengisi baris awal dengan mencari apakah ada production yang cocok dengan input
     for i in range(inputLength):
         #apabila ada aturan produksi yang cocok dengan input, masukkan aturan produksi ke tabel
-        # try:
-        table[0][i].extend(CNF[input[i]])
+        try:
+            table[0][i].extend(CNF[input[i]])
+        except KeyError:
+            continue
         #jika tidak ada, coba cek apakah itu sebuah string/number/variabel dengan regex
         # except KeyError:
         #     for targetText in listRegex:
@@ -62,6 +67,10 @@ def cykParser(input):
                             table[i][j] = CNF[result1+result2]
                         except KeyError:
                             continue
+    
+    for x in table:
+        print(x)
+
 
     if("S" in table[inputLength-1][0]):
         print("Accepted")
