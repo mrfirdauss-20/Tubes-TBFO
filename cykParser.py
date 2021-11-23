@@ -1,11 +1,11 @@
 import re
 
-mapRegex = {
-    r'[A-Za-z_][A-Za-z_0-9]*' : ["variable"],
-    r'[0-9]*' : ["number"],
-    r'[A-z0-9]*' : ["string"],
-}
-listRegex = [r'[0-9]*', r'[A-Za-z_][A-Za-z_0-9]*', r'[A-z0-9]*']
+# mapRegex = {
+#     r'[A-Za-z_][A-Za-z_0-9]*' : ["variable"],
+#     r'[0-9]*' : ["number"],
+#     r'[A-z0-9]*' : ["string"],
+# }
+# listRegex = [r'[0-9]*', r'[A-Za-z_][A-Za-z_0-9]*', r'[A-z0-9]*']
 
 global CNF
 CNF = {}
@@ -39,18 +39,18 @@ def cykParser(input):
     #mengisi baris awal dengan mencari apakah ada production yang cocok dengan input
     for i in range(inputLength):
         #apabila ada aturan produksi yang cocok dengan input, masukkan aturan produksi ke tabel
-        try:
-            table[0][i].extend(CNF[input[i]])
+        # try:
+        table[0][i].extend(CNF[input[i]])
         #jika tidak ada, coba cek apakah itu sebuah string/number/variabel dengan regex
-        except KeyError:
-            for targetText in listRegex:
-                #jika ternyata string/number/variabel, masukkan aturan produksi tempat kemunculan hasil
-                if(re.match(targetText, input[i])):
-                    for result in mapRegex[targetText]:
-                        try:
-                            table[0][i].extend(CNF[result])
-                        except KeyError:
-                            continue
+        # except KeyError:
+        #     for targetText in listRegex:
+        #         #jika ternyata string/number/variabel, masukkan aturan produksi tempat kemunculan hasil
+        #         if(re.match(targetText, input[i])):
+        #             for result in mapRegex[targetText]:
+        #                 try:
+        #                     table[0][i].extend(CNF[result])
+        #                 except KeyError:
+        #                     continue
     #mengisi tabel dengan algoritma CYK                    
     for i in range(1, inputLength):
         for j in range(inputLength-i):
