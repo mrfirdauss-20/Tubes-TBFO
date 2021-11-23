@@ -1,5 +1,5 @@
 S -> S 'nl' S1 | S1
-S1 -> COND | LOOP | COMMENT | RAISE | RET | EXP | ASSIGN | IMPORT | 'pass' | 'break' | 'cont'
+S1 -> COND | LOOP | COMMENT | RAISE | RET | EXP | ASSIGN | IMPORT | CLASS | DEF | 'pass' | 'break' | 'cont'
 
 COMMENT -> 'sharp' ANY 'nl' | 'triple_quote' ANYNL 'triple_quote'
 ANYNL -> ANYNL NL ANY | ε
@@ -55,6 +55,6 @@ DEFARGS -> DEFARGS1 | ε
 DEFARGS1 -> DEFARGS1 COMMA 'id' | 'id'
 DEFARG -> 'id' COLON ARGTYPE | 'id'
 ARGTYPE -> LP ARGTYPE RP | 'id' LB ARGTYPE RB | 'id'
-DEFRETT -> 'rarrow' 'id' | ε
+DEFRETT -> 'min' 'gt' 'id' | ε
 
 CLASS -> 'class' 'id' COLON S
