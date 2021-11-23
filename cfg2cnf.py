@@ -9,12 +9,72 @@ S = TypeVar("S")
 
 
 class Cfg2Cnf:
-    prods: dict[list[str]] = {}
+    """
+    Convert Context-Free Grammar (CFG) to Chomsky Normal Form (CFG)
+    This class assumes the CFG to be stored in a UTF-8 file in the
+    form of
+
+        Terminals:
+        < list of terminals separated by space >
+
+        Variables:
+        < list of non-terminals separated by space >
+
+        Productions:
+        < list of productions separated by lines >
+        < format: [symbol] -> [symbol] [symbol] ... | [symbol] ... >
+
+    The order of "Terminals", "Variables", and "Productions" sections
+    can be switched. However the order of list of productions affects
+    how the algorithm works. In general it only concerns efficiency.
+    However if the productions are not in order there is no guarantee
+    that conversion will produce correct results.
+
+    Parameters
+    ----------
+    filename: str
+        The CFG file path to be passed to open()
+    start_sym: str
+        The start symbol of the grammar
+
+    Attributes
+    ----------
+    prods: dict[list[list[str]]]
+        Collection of all productions, stored as dict.
+        Key: production symbol, value: List of rules,
+        wherein each rule contains list of symbols
+    terminals: list[str]
+        Collection of all terminals
+    variables: list[str]
+        Collection of all non-terminals
+    start_sym: str
+        Start symbol of the grammar
+
+    Methods
+    -------
+    convert()
+        Main method to convert CFG to CNF
+    write(filename: str, complete: bool = True)
+        Write the grammar to a file
+    """
+
+    prods: dict[list[list[str]]] = {}
     terminals: list[str] = []
     variables: list[str] = []
     start_sym: str
 
     def __init__(self, filename: str, start_sym: str) -> None:
+        """
+        Read CFG file and initialize attributes data (productions,
+        terminals, variables, start symbol)
+
+        Parameters
+        ----------
+        filename: str
+            The CFG file path to be passed to open()
+        start_sym: str
+            The start symbol of the grammar
+        """
         state = None
         with codecs.open(filename, encoding="utf-8") as f:
             for line in f:
@@ -38,10 +98,19 @@ class Cfg2Cnf:
 
         self.start_sym = start_sym
 
-    def is_terminal(self, sym) -> bool:
-        return sym in self.terminals
-
     def convert(self) -> None:
+        """
+        Convert the context-free grammar to Chomsky Normal Form.
+        Reference used: https://www.geeksforgeeks.org/converting-context-free-grammar-chomsky-normal-form/
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+        """
 
         # step 1: eliminate start symbol from RHS
 
@@ -92,7 +161,7 @@ class Cfg2Cnf:
         unit_prods = []
         for sym in self.prods:
             for rule in self.prods[sym]:
-                if len(rule) == 1 and not self.is_terminal(rule[0]):
+                if len(rule) == 1 and not self.__is_terminal(rule[0]):
                     unit_prods.append((sym, rule[0]))
 
         while unit_prods:
@@ -101,7 +170,7 @@ class Cfg2Cnf:
                 self.prods[sym].remove([unit_sym])
                 if unit_sym != sym:
                     for rule in self.prods[unit_sym]:
-                        if len(rule) > 1 or self.is_terminal(rule[0]):
+                        if len(rule) > 1 or self.__is_terminal(rule[0]):
                             self.__extend_unique(self.prods[sym], [rule])
                         else:
                             unit_prods.append([sym, rule[0]])
@@ -120,7 +189,7 @@ class Cfg2Cnf:
                 terms, vrbls = self.__split_rule(rule)
                 if (terms and vrbls) or (len(terms) > 1):
                     for i in range(len(rule)):
-                        if self.is_terminal(rule[i]):
+                        if self.__is_terminal(rule[i]):
                             if rule[i] in new_terms:
                                 new_sym = new_terms[rule[i]]
                             else:
@@ -159,6 +228,21 @@ class Cfg2Cnf:
         self.prods.update(new_prods)
 
     def write(self, filename: str, complete: bool = True) -> None:
+        """
+        Write the grammar (converted or not) to a file.
+
+        Parameters
+        ----------
+        filename: str
+            The output file path to be passed to open()
+        complete: bool, optional
+            Whether to write the terminals and variables alongside
+            productions (default is True)
+
+        Returns
+        -------
+        None
+        """
         with codecs.open(filename, mode="w", encoding="utf-8") as f:
             if complete:
                 f.write("Terminals:\n")
@@ -171,22 +255,56 @@ class Cfg2Cnf:
                 f.write(f"{sym} -> {' | '.join(prods_str)}\n")
 
     def __split_rule(self, rule: list[str]) -> tuple[list[str], list[str]]:
+        """
+        Split a rule into list of terminals and non-terminals
+
+        Parameters
+        ----------
+        rule: list[str]
+            A production rule (list of symbols)
+
+        Returns
+        -------
+        terms: list[str]
+            List of terminal symbols (in order)
+        vrbls: list[str]]
+            List of non-terminal symbols (in order)
+        """
         terms = []
         vrbls = []
         for sym in rule:
-            if self.is_terminal(sym):
+            if self.__is_terminal(sym):
                 terms.append(sym)
             else:
                 vrbls.append(sym)
         return terms, vrbls
 
     def __replace_nullable(
-        self, prod: list[str], null_sym: str, start: int = 0
-    ) -> list[str]:
+        self, prod: list[list[str]], null_sym: str, __start: int = 0
+    ) -> list[list[str]]:
+        """
+        Replace a nullable symbol from a production.
+        It considers permutations of the nullable symbol
+        in a rule using recursive approach.
+
+        Parameters
+        ----------
+        prod: list[list[str]]
+            The production, list of rules. Rule: list of symbols.
+        null_sym: str
+            The symbol which is nullable
+        __start: int, optional
+            Start rule position (internal recursion status)
+
+        Returns
+        -------
+        result: list[list[str]]
+            The production with no nullable symbol null_sym
+        """
         result = []
         length = len(prod)
 
-        for i in range(start, length):
+        for i in range(__start, length):
             if prod[i] == null_sym:
                 new_rule = prod[:i] + prod[i + 1 :]
 
@@ -202,6 +320,17 @@ class Cfg2Cnf:
         return result
 
     def __remove_useless(self) -> None:
+        """
+        Remove useless productions
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+        """
 
         # traverse from start symbol, obtain stack
 
@@ -217,7 +346,7 @@ class Cfg2Cnf:
                 dels.append(sym)
             for rule in self.prods[sym]:
                 for rule_sym in rule:
-                    if self.is_terminal(rule_sym) and rule_sym not in terms:
+                    if self.__is_terminal(rule_sym) and rule_sym not in terms:
                         dels.append(rule_sym)
 
         for sym in self.terminals:
@@ -228,7 +357,7 @@ class Cfg2Cnf:
             if sym not in vrbls:
                 dels.append(sym)
 
-        self.__delete_rules(dels)
+        self.__delete_symbols(dels)
 
         # unterminable productions:
         # initialize obviously terminable productions
@@ -272,9 +401,21 @@ class Cfg2Cnf:
             if self.__is_repeating(stack):
                 break
 
-        self.__delete_rules(unterminables)
+        self.__delete_symbols(unterminables)
 
-    def __delete_rules(self, syms: list[str]) -> None:
+    def __delete_symbols(self, syms: list[str]) -> None:
+        """
+        Delete symbols from grammar (productions, variable/terminal list)
+
+        Parameters
+        ----------
+        syms: list[str]
+            List of symbols to be removed
+
+        Returns
+        -------
+        None
+        """
 
         # delete rules
 
@@ -301,32 +442,105 @@ class Cfg2Cnf:
                 self.terminals.remove(sym)
 
     def __traverse(self, sym: str, terms: list[str], vrbls: list[str]) -> None:
+        """
+        Traverse the grammar starting from a specified production
+        and store the terminals and non-terminals encountered
+
+        Parameters
+        ----------
+        sym: str
+            Start production symbol
+        terms: list[str]
+            Stack of terminals encountered that will be updated by the method
+        vrbls: list[str]
+            Stack of terminals encountered that will be updated by the method
+
+        Returns
+        -------
+        None
+        """
         for rule in self.prods[sym]:
             for rule_sym in rule:
                 if (
-                    self.is_terminal(rule_sym)
+                    self.__is_terminal(rule_sym)
                     and rule_sym not in terms
                     and rule_sym in self.terminals
                 ):
                     terms.append(rule_sym)
                 elif (
-                    not self.is_terminal(rule_sym)
+                    not self.__is_terminal(rule_sym)
                     and rule_sym not in vrbls
                     and rule_sym in self.variables
                 ):
                     vrbls.append(rule_sym)
                     self.__traverse(rule_sym, terms, vrbls)
 
+    def __is_terminal(self, sym: str) -> bool:
+        """
+        Determines whether a symbol is a terminal or not
+
+        Parameters
+        ----------
+        sym: str
+            The symbol
+
+        Returns
+        -------
+        bool
+        """
+        return sym in self.terminals
+
     def __extend_unique(self, lst: list[S], ext: list[S]) -> None:
+        """
+        Extend list but keep the elements unique
+
+        Parameters
+        ----------
+        lst: list[S]
+            The list to be updated
+        ext: list[S]
+            The list of extensions
+
+        Returns
+        -------
+        None
+        """
         for val in ext:
             if val not in lst:
                 lst.append(val)
 
     def __append_unique(self, lst: list[S], val: S) -> None:
+        """
+        Append to list if it's not in the list yet
+
+        Parameters
+        ----------
+        lst: list[S]
+            The list to be updated
+        val: S
+            The element to be appended
+
+        Returns
+        -------
+        None
+        """
         if val not in lst:
             lst.append(val)
 
     def __is_repeating(self, visited: list[S]) -> bool:
+        """
+        Determine whether elements in a list is repeating or not.
+        Useful for avoiding infinite loops and recursions
+
+        Parameters
+        ----------
+        visited: list[S]
+            List of "visited" elements
+
+        Returns
+        -------
+        bool
+        """
         unrepeated = []
         for i in range(len(visited)):
             try:
