@@ -80,7 +80,6 @@ class Cfg2Cnf:
         start_sym: str
             The start symbol of the grammar
         """
-        state = None
         with codecs.open(filename, encoding="utf-8") as f:
             for line in f:
                 if "->" in line:
@@ -224,7 +223,7 @@ class Cfg2Cnf:
         if len(self.prods) == 1 and len(self.prods[self.start_sym]) == 0:
             self.prods[self.start_sym] = ["ε"]
 
-    def write(self, filename: str, complete: bool = True) -> None:
+    def write(self, filename: str) -> None:
         """Write the grammar (converted or not) to a file.
 
         Parameters
@@ -495,12 +494,11 @@ if __name__ == "__main__":
     parser.add_argument("infile")
     parser.add_argument("outfile")
     parser.add_argument("start_symbol")
-    parser.add_argument("--complete", action=argparse.BooleanOptionalAction)
 
     args = parser.parse_args()
     t1 = time.perf_counter()
 
-    converter = Cfg2Cnf(args.infile, args.start_symbol)
+    converter = Cfg2Cnf(args.infile)
     converter.convert()
     converter.write(args.outfile, args.complete)
 
