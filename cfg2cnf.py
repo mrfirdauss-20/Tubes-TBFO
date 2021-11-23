@@ -220,7 +220,7 @@ class Cfg2Cnf:
                         dels.append(rule_sym)
 
         for sym in self.variables:
-            if sym not in vrbls:
+            if sym != self.start_sym and sym not in vrbls:
                 dels.append(sym)
 
         for sym in self.terminals:
