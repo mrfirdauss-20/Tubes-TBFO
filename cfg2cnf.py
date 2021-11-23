@@ -163,7 +163,6 @@ class Cfg2Cnf:
             for sym, rules in self.prods.items():
                 prods_str = map(lambda p: " ".join(p), rules)
                 f.write(f"{sym} -> {' | '.join(prods_str)}\n")
-            f.write("\n")
 
     def __split_rule(self, rule: list[str]) -> tuple[list[str], list[str]]:
         terms = []
