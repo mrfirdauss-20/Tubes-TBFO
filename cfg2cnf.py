@@ -130,6 +130,7 @@ class Cfg2Cnf:
             if ["ε"] in self.prods[sym]:
                 null_prods.append(sym)
 
+        stack = []
         while null_prods:
             sym = null_prods.pop(0)
             self.prods[sym].remove(["ε"])
@@ -150,9 +151,18 @@ class Cfg2Cnf:
                             self.prods[other], self._replace_nullable(rule, sym)
                         )
                     if ["ε"] in self.prods[other]:
-                        null_prods.insert(0, other)
+                        if other != self.start_sym:
+                            self._append_unique(null_prods, other)
                     elif other in null_prods:
                         self._remove_all(null_prods, other)
+
+            stack.append(sym)
+            if self._is_repeating(stack):
+                for sym in self.prods:
+                    if sym != self.start_sym:
+                        pass
+                        self._remove_all(self.prods[sym], ["ε"])
+                break
 
         # step 2b: remove unit productions
 
@@ -162,8 +172,9 @@ class Cfg2Cnf:
                 if len(rule) == 1 and not self._is_terminal(rule[0]):
                     unit_prods.append((sym, rule[0]))
 
+        stack = []
         while unit_prods:
-            sym, unit_sym = unit_prods.pop()
+            sym, unit_sym = unit_prods.pop(0)
             if unit_sym in self.prods:
                 if [unit_sym] in self.prods[sym]:
                     self._remove_all(self.prods[sym], [unit_sym])
@@ -174,8 +185,13 @@ class Cfg2Cnf:
                         elif rule[0] != unit_sym:
                             unit_prods.append([sym, rule[0]])
 
+            stack.append((sym, unit_sym))
+            if self._is_repeating(stack):
+                break
+
         # step 2c: remove useless productions
 
+        self.write("cfg_test.txt")
         self._remove_useless()
 
         # step 3: decompose terminals
@@ -361,12 +377,10 @@ class Cfg2Cnf:
                 unterminables.append(sym)
 
         # unterminable might be actually terminable, check
-        # using "queue", unterminable goes back to the end of line
-        # until it's indefinitely repeating
 
         stack = []
         while unterminables:
-            sym = unterminables.pop()
+            sym = unterminables.pop(0)
             can_terminate = False
             for rule in self.prods[sym]:
                 for rule_sym in rule:
@@ -379,7 +393,7 @@ class Cfg2Cnf:
             if can_terminate:
                 terminables.append(sym)
             else:
-                unterminables.insert(0, sym)
+                unterminables.append(sym)
                 stack.append(sym)
 
             if self._is_repeating(stack):
@@ -478,7 +492,7 @@ class Cfg2Cnf:
         return False
 
     def _is_terminal(self, sym: str) -> bool:
-        return sym[0] == "'" and sym[-1] == "'"
+        return (sym[0] == "'" and sym[-1] == "'") or sym == "ε"
 
     def _extend_unique(self, lst: list[S], ext: list[S]) -> None:
         for val in ext:
