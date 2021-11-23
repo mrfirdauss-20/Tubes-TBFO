@@ -237,6 +237,9 @@ class Cfg2Cnf:
 
         self.prods.update(new_prods)
 
+        if len(self.prods) == 1 and len(self.prods[self.start_sym]) == 0:
+            self.prods[self.start_sym] = ["ε"]
+
     def write(self, filename: str, complete: bool = True) -> None:
         """Write the grammar (converted or not) to a file.
 
@@ -408,6 +411,10 @@ class Cfg2Cnf:
 
             if self._is_repeating(stack):
                 break
+
+        if self.start_sym in unterminables:
+            # will be true if and only if cnf is in form of S -> ε
+            unterminables.remove(self.start_sym)
 
         self._delete_symbols(unterminables)
 
