@@ -12,7 +12,7 @@ cykParser.getCNF(modelPath)
 
 # inputFile = input("Masukkkan nama file yang ingin di-lexing: ")
 lexer = Lexerr.Lexer()
-with open("tes.py") as f:
+with open("tes.txt") as f:
     for ln in f:
         lexer.lex(ln + "\n")
     last = None
@@ -30,10 +30,10 @@ i = map(lambda x: x.value, lexer.tokens)
 tes = []
 # i = i.split(" ")
 i = [string for string in i if string != ""]
-# print(i)
+print(i)
 # print(i.count("NEWLINE"))
 j = 1
-
+# print(i)
 # for x in i:
 #     print(x, end=" ")
 #     if x == "NEWLINE":
@@ -41,5 +41,7 @@ j = 1
 #         j += 1
 
 #start parsing
+#i = ['a', 'a', 'a', 'b', 'b', 'b', 'c', 'c']
 cykParser.cykParser(i)
+# print(len(i))
 # print(i)
