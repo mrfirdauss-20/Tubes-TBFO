@@ -1,12 +1,12 @@
 from os import pipe
-import re
+import codecs
 
 global CNF
 CNF = {}
 
 
 def getCNF(pathCNF):
-    file = open(pathCNF).read()
+    file = codecs.open(pathCNF, encoding="utf-8").read()
     grammarCNF = file.split('\n')
     # print(len(grammarCNF))
     lengthGrammar = len(grammarCNF)
@@ -39,6 +39,7 @@ def getCNF(pathCNF):
 
 def cykParser(input):
     inputLength = len(input)
+
     #print(inputLength)
     # inisialisasi pada tabel CYK
     table = [[[] for j in range(i)] for i in range((inputLength), 0, -1)]
@@ -50,6 +51,9 @@ def cykParser(input):
         except KeyError:
             continue
             # print("belum terdefinisi untuk "+input[i])
+
+    if not inputLength and "ε" in CNF:
+        return True
             
     # mengisi tabel dengan algoritma CYK
     for i in range(1, inputLength):
