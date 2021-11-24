@@ -1,35 +1,32 @@
 S -> S 'nl' S1 | S1
-S1 -> COND | LOOP | COMMENT | RAISE | RET | EXP | ASSIGN | IMPORT | 'pass' | 'break' | 'cont'
-
-COMMENT -> 'sharp' ANY 'nl' | 'triple_quote' ANYNL 'triple_quote'
-ANYNL -> ANYNL NL ANY | ε
-ANY -> S1 | 'undef' | ε
+S1 -> COND | LOOP | RAISE | RET | EXP | ASSIGN | IMPORT | CLASS | DEF | 'pass' | 'break' | 'cont' | 'comment'
 
 ASSIGN -> ASSIGNCHAIN | 'id' ASSIGNOP EXP
 ASSIGNCHAIN -> 'id' 'eq' ASSIGNCHAIN | 'id' 'eq' EXP
 ASSIGNOP -> 'eq' | 'plus' 'eq' | 'min' 'eq' | 'mult' 'eq' | 'div' 'eq' | 'mod' 'eq' | 'div' 'div' 'eq' | 'mult' 'mult' 'eq' | 'amp' 'eq' | 'bor' 'eq' | 'bnot' 'eq' | 'gt' 'gt' 'eq' | 'lt' 'lt' 'eq'
 
-EXP -> PAREXP | LOGICEXP | MATHEXP | FUNCEXP | 'id' 'lb' EXP 'rb' | LIT | 'id'
+EXP -> PAREXP | LOGICEXP | MATHEXP | FUNCEXP | 'id' LB EXP RB | DICT | TUPLE | LIT | 'id'
 
-LIT -> 'real' | 'int' | 'str' | 'false' | 'true' | 'none'
-LB -> 'lb' NL
-RB -> 'rb' NL
+LIT -> REAL | 'int' | 'xbo' | 'str' | 'false' | 'true' | 'none'
+REAL -> 'int' 'dot' 'int' | 'dot' 'int'
+
+DICT -> LC DICTLIST RC
+DICTLIST -> DICTLIST DICT1 | DICT1
+DICT1 -> 'str' COLON EXP COMMA
+TUPLE -> LP ARGS RP
+ARGS -> ARGS1 | ε
+ARGS1 -> ARGS1 COMMA EXP | EXP
+
+FUNCEXP -> 'id' TUPLE
+COMMA -> 'comma' NL
 
 PAREXP -> LP PAREXP1 RP
 PAREXP1 -> EXP | PARLOGICEXP | PARMATHEXP
 PARLOGICEXP -> EXP NL RELOP NL EXP | 'not' EXP | LOGICEXP
 PARMATHEXP -> EXP NL MATHOP2 NL EXP | MATHEXP
-LP -> 'lp' NL
-RP -> NL 'rp'
-NL -> 'nl' | ε
-
-FUNCEXP -> 'id' LP ARGS RP
-ARGS -> ARGS1 | ε
-ARGS1 -> ARGS1 COMMA EXP | EXP
-COMMA -> 'comma' NL
 
 LOGICEXP -> EXP RELOP EXP | 'not' EXP
-RELOP -> 'and' | 'or' | 'is' | 'is' 'not' | 'in' | 'not' 'in' | 'iseq' | 'neq' | 'gt' | 'gt' 'eq' | 'lt' | 'lt' 'eq'
+RELOP -> 'and' | 'or' | 'is' | 'is' 'not' | 'in' | 'not' 'in' | 'eq' 'eq' | 'exc' 'eq' | 'gt' | 'gt' 'eq' | 'lt' | 'lt' 'eq'
 
 MATHEXP -> EXP MATHOP2 EXP | MATHOP1 EXP
 MATHOP1 -> 'plus' | 'min' | 'tilde'
@@ -55,6 +52,14 @@ DEFARGS -> DEFARGS1 | ε
 DEFARGS1 -> DEFARGS1 COMMA 'id' | 'id'
 DEFARG -> 'id' COLON ARGTYPE | 'id'
 ARGTYPE -> LP ARGTYPE RP | 'id' LB ARGTYPE RB | 'id'
-DEFRETT -> 'rarrow' 'id' | ε
+DEFRETT -> 'min' 'gt' 'id' | ε
 
 CLASS -> 'class' 'id' COLON S
+
+LC -> 'lc' NL
+RC -> NL 'rc'
+LB -> 'lb' NL
+RB -> NL 'rb'
+LP -> 'lp' NL
+RP -> NL 'rp'
+NL -> 'nl' | ε
