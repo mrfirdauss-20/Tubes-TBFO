@@ -1,22 +1,17 @@
 import LexerFunc
-import sys
-import cykParser
 
+inputFile = input("Masukkkan nama file yang ingin di-lexing: ")
+tokenized = LexerFunc.startToken(inputFile)
+i = tokenized
+tes = []
+i = i.split(" ")
+i = [string for string in i if string != ""]
 
-# Load Chomsky Normal Form
-if len(sys.argv) > 1:
-    modelPath = str(sys.argv[1])
-else:
-	modelPath = 'cnf1_fikron.txt'
-	
-cykParser.getCNF(modelPath)
+print(i.count("NEWLINE"))
+j = 1
 
-tokenized= LexerFunc.startToken("input_fikron.txt")
-i=tokenized
-tes=[]
-# i=i.split(' ')
-i = [string for string in i if string !='']
-
-print(i)
-# print(len(i))
-cykParser.cykParser(i)
+for x in i:
+    print(x, end=" ")
+    if x == "NEWLINE":
+        print(j)
+        j += 1

@@ -80,7 +80,6 @@ class Cfg2Cnf:
         start_sym: str
             The start symbol of the grammar
         """
-        state = None
         with codecs.open(filename, encoding="utf-8") as f:
             for line in f:
                 if "->" in line:
@@ -131,6 +130,7 @@ class Cfg2Cnf:
             if ["ε"] in self.prods[sym]:
                 null_prods.append(sym)
 
+        stack = []
         while null_prods:
             sym = null_prods.pop(0)
             self.prods[sym].remove(["ε"])
@@ -139,6 +139,8 @@ class Cfg2Cnf:
 
             for rule in self.prods[sym]:
                 self._extend_unique(self.prods[sym], self._replace_nullable(rule, sym))
+            self._remove_all(self.prods[sym], ["ε"])
+            self._remove_all(null_prods, sym)
 
             # replace for other productions
 
@@ -149,7 +151,18 @@ class Cfg2Cnf:
                             self.prods[other], self._replace_nullable(rule, sym)
                         )
                     if ["ε"] in self.prods[other]:
-                        null_prods.insert(0, other)
+                        if other != self.start_sym:
+                            self._append_unique(null_prods, other)
+                    elif other in null_prods:
+                        self._remove_all(null_prods, other)
+
+            stack.append(sym)
+            if self._is_repeating(stack):
+                for sym in self.prods:
+                    if sym != self.start_sym:
+                        pass
+                        self._remove_all(self.prods[sym], ["ε"])
+                break
 
         # step 2b: remove unit productions
 
@@ -159,20 +172,26 @@ class Cfg2Cnf:
                 if len(rule) == 1 and not self._is_terminal(rule[0]):
                     unit_prods.append((sym, rule[0]))
 
+        stack = []
         while unit_prods:
-            sym, unit_sym = unit_prods.pop()
+            sym, unit_sym = unit_prods.pop(0)
             if unit_sym in self.prods:
                 if [unit_sym] in self.prods[sym]:
-                    self.prods[sym].remove([unit_sym])
+                    self._remove_all(self.prods[sym], [unit_sym])
                 if unit_sym != sym:
                     for rule in self.prods[unit_sym]:
                         if len(rule) > 1 or self._is_terminal(rule[0]):
                             self._extend_unique(self.prods[sym], [rule])
-                        else:
+                        elif rule[0] != unit_sym:
                             unit_prods.append([sym, rule[0]])
+
+            stack.append((sym, unit_sym))
+            if self._is_repeating(stack):
+                break
 
         # step 2c: remove useless productions
 
+        self.write("cfg_test.txt")
         self._remove_useless()
 
         # step 3: decompose terminals
@@ -224,7 +243,7 @@ class Cfg2Cnf:
         if len(self.prods) == 1 and len(self.prods[self.start_sym]) == 0:
             self.prods[self.start_sym] = ["ε"]
 
-    def write(self, filename: str, complete: bool = True) -> None:
+    def write(self, filename: str) -> None:
         """Write the grammar (converted or not) to a file.
 
         Parameters
@@ -358,12 +377,10 @@ class Cfg2Cnf:
                 unterminables.append(sym)
 
         # unterminable might be actually terminable, check
-        # using "queue", unterminable goes back to the end of line
-        # until it's indefinitely repeating
 
         stack = []
         while unterminables:
-            sym = unterminables.pop()
+            sym = unterminables.pop(0)
             can_terminate = False
             for rule in self.prods[sym]:
                 for rule_sym in rule:
@@ -376,7 +393,7 @@ class Cfg2Cnf:
             if can_terminate:
                 terminables.append(sym)
             else:
-                unterminables.insert(0, sym)
+                unterminables.append(sym)
                 stack.append(sym)
 
             if self._is_repeating(stack):
@@ -384,7 +401,7 @@ class Cfg2Cnf:
 
         if self.start_sym in unterminables:
             # will be true if and only if cnf is in form of S -> ε
-            unterminables.remove(self.start_sym)
+            self._remove_all(unterminables, self.start_sym)
 
         self._delete_symbols(unterminables)
 
@@ -475,7 +492,7 @@ class Cfg2Cnf:
         return False
 
     def _is_terminal(self, sym: str) -> bool:
-        return sym[0] == "'" and sym[-1] == "'"
+        return (sym[0] == "'" and sym[-1] == "'") or sym == "ε"
 
     def _extend_unique(self, lst: list[S], ext: list[S]) -> None:
         for val in ext:
@@ -486,6 +503,13 @@ class Cfg2Cnf:
         if val not in lst:
             lst.append(val)
 
+    def _remove_all(self, lst: list[S], val: S) -> None:
+        try:
+            while True:
+                lst.remove(val)
+        except ValueError:
+            pass
+
 
 if __name__ == "__main__":
     import argparse
@@ -495,14 +519,13 @@ if __name__ == "__main__":
     parser.add_argument("infile")
     parser.add_argument("outfile")
     parser.add_argument("start_symbol")
-    parser.add_argument("--complete", action=argparse.BooleanOptionalAction)
 
     args = parser.parse_args()
     t1 = time.perf_counter()
 
     converter = Cfg2Cnf(args.infile, args.start_symbol)
     converter.convert()
-    converter.write(args.outfile, args.complete)
+    converter.write(args.outfile)
 
     t2 = time.perf_counter()
     print(f"Done in {t2 - t1}s", end="\n\n")
