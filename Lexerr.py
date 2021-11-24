@@ -144,7 +144,7 @@ class Token(Enum):
 
     # Special value
 
-    ILLEGAL = None
+    ILLEGAL = "illegal"
 
 
 class Lexer:
@@ -435,7 +435,13 @@ class Lexer:
         ]:
             self.tokens.append(Token.ILLEGAL)
 
-
+def startLexerr(fileName):
+    lexer =Lexer()
+    with open(fileName) as f:
+        for ln in f:
+            lexer.lex(ln+"\n")
+        
+    print(lexer.tokens)
 if __name__ == "__main__":
     lexer = Lexer()
     with open("main.py") as f:
@@ -449,3 +455,5 @@ if __name__ == "__main__":
         else:
             print(token.value, end=" ")
         last = token
+
+    startLexerr("main.py")
