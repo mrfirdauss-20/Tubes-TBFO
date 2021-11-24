@@ -32,8 +32,9 @@ Prerequirement:
 
 ## Usage
 Method 1:
-  1. `python3 main.py <file_cnf>` jalankan main program.
+  1. `python3 main.py <file_cnf>` 
 
+  
 Method 2:
   1. `py main.py`
 
