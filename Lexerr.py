@@ -39,6 +39,20 @@ class LexState(Enum):
     NUM = auto()
     XBONUM = auto()
     WORD = auto()
+    STR = auto()
+    STR3 = auto()
+    SQUOTE = auto()
+    SQUOTE2 = auto()
+    SQUOTE3 = auto()
+    SQUOTE32 = auto()
+    SQUOTE31 = auto()
+    DQUOTE = auto()
+    DQUOTE1 = auto()
+    DQUOTE2 = auto()
+    DQUOTE3 = auto()
+    DQUOTE32 = auto()
+    DQUOTE31 = auto()
+    COMMENT = auto()
     BACKSLASH = auto()
     ILLEGAL = auto()
 
@@ -54,10 +68,15 @@ class LexInput(Enum):
     OCT = auto()
     DIGIT = auto()
     ALPHA = auto()
+    SHARP = auto()
+    SQUOTE = auto()
+    DQUOTE = auto()
     BACKSLASH = auto()
     NEWLINE = auto()
     SYMBOL = auto()
     BLANK = auto()
+    NOSQUOTE = auto()
+    NODQUOTE = auto()
     UNKNOWN = auto()
 
 
@@ -115,6 +134,7 @@ class Token(Enum):
 
     # Other
 
+    COMMENT = "comment"
     NUM = "int"
     XBO = "xbo"
     STR = "str"
@@ -186,9 +206,12 @@ class Lexer:
             LexInput.ZERO: LexState.ZERO,
             LexInput.ALPHA: LexState.ALPHA,
             LexInput.DIGIT: LexState.DIGIT,
+            LexInput.DQUOTE: LexState.DQUOTE1,
+            LexInput.SHARP: LexState.COMMENT,
             LexInput.BACKSLASH: LexState.BACKSLASH,
             LexInput.SYMBOL: LexState.SYMBOL,
             LexInput.BLANK: LexState.BLANK,
+            LexInput.UNKNOWN: LexState.START,
         },
         LexState.ALPHA: {
             LexInput.ALPHA: LexState.ALPHA,
@@ -240,6 +263,40 @@ class Lexer:
             LexInput.BLANK: LexState.XBONUM,
             LexInput.BACKSLASH: LexState.BACKSLASH,
         },
+        LexState.DQUOTE: {
+            LexInput.DQUOTE: LexState.STR,
+            LexInput.NEWLINE: LexState.ILLEGAL,
+            LexInput.NODQUOTE: LexState.DQUOTE,
+        },
+        LexState.DQUOTE1: {
+            LexInput.DQUOTE: LexState.DQUOTE2,
+            LexInput.NEWLINE: LexState.ILLEGAL,
+            LexInput.NODQUOTE: LexState.DQUOTE,
+        },
+        LexState.DQUOTE2: {
+            LexInput.DQUOTE: LexState.DQUOTE3,
+            LexInput.NEWLINE: LexState.ILLEGAL,
+            LexInput.NODQUOTE: LexState.STR,
+        },
+        LexState.DQUOTE3: {
+            LexInput.NODQUOTE: LexState.DQUOTE3,
+            LexInput.NEWLINE: LexState.DQUOTE3,
+            LexInput.DQUOTE: LexState.DQUOTE32,
+        },
+        LexState.DQUOTE32: {
+            LexInput.NODQUOTE: LexState.DQUOTE3,
+            LexInput.NEWLINE: LexState.DQUOTE3,
+            LexInput.DQUOTE: LexState.DQUOTE31,
+        },
+        LexState.DQUOTE31: {
+            LexInput.NODQUOTE: LexState.DQUOTE3,
+            LexInput.NEWLINE: LexState.DQUOTE3,
+            LexInput.DQUOTE: LexState.STR,
+        },
+        LexState.COMMENT: {
+            LexInput.UNKNOWN: LexState.COMMENT,
+            LexInput.NEWLINE: LexState.START,
+        },
         LexState.BACKSLASH: {
             LexInput.NEWLINE: LexState.START,
         },
@@ -266,6 +323,12 @@ class Lexer:
             return LexInput.DIGIT
         elif is_alpha(char) and start.value < LexInput.ALPHA.value:
             return LexInput.ALPHA
+        elif char == "'" and start.value < LexInput.SQUOTE.value:
+            return LexInput.SQUOTE
+        elif char == '"' and start.value < LexInput.DQUOTE.value:
+            return LexInput.DQUOTE
+        elif char == "#" and start.value < LexInput.SHARP.value:
+            return LexInput.SHARP
         elif char == "\\" and start.value < LexInput.BACKSLASH.value:
             return LexInput.BACKSLASH
         elif char == "\n" and start.value < LexInput.NEWLINE.value:
@@ -274,6 +337,10 @@ class Lexer:
             return LexInput.SYMBOL
         elif is_space(char) and start.value < LexInput.BLANK.value:
             return LexInput.BLANK
+        elif char not in ["'", "\n"] and start.value < LexInput.NOSQUOTE.value:
+            return LexInput.NOSQUOTE
+        elif char not in ['"', "\n"] and start.value < LexInput.NODQUOTE.value:
+            return LexInput.NODQUOTE
 
         return LexInput.UNKNOWN
 
@@ -287,32 +354,53 @@ class Lexer:
         state = LexState.START
         word = ""
 
-        for char in string:
+        while string:
             inp = LexInput.START
-            while True:
+            char = string[0]
+
+            word += char
+
+            while string:
                 inp = self.parse_char(char, inp)
                 nextState = self.delta(state, inp)
+                # print(char, inp, state, nextState)
 
                 if nextState != LexState.ILLEGAL or inp == LexInput.UNKNOWN:
                     break
+
+            if nextState in [
+                LexState.WORD,
+                LexState.XBONUM,
+                LexState.NUM,
+                LexState.STR,
+            ]:
+                word = word[:-1]
 
             if nextState == LexState.SYMBOL:
                 if char in self.operators:
                     self.tokens.append(self.operators[char])
                 else:
                     self.tokens.append(Token.UNDEF)
+                state = nextState
                 nextState = LexState.START
             elif nextState == LexState.WORD:
                 if word in self.keywords:
                     self.tokens.append(self.keywords[word])
                 else:
                     self.tokens.append(Token.ID)
+                state = nextState
                 nextState = LexState.START
             elif nextState == LexState.XBONUM:
                 self.tokens.append(Token.XBO)
+                state = nextState
                 nextState = LexState.START
             elif nextState == LexState.NUM:
                 self.tokens.append(Token.NUM)
+                state = nextState
+                nextState = LexState.START
+            elif nextState in [LexState.STR, LexState.STR3]:
+                self.tokens.append(Token.STR)
+                state = nextState
                 nextState = LexState.START
 
             if nextState == LexState.ILLEGAL:
@@ -320,18 +408,44 @@ class Lexer:
                 nextState = LexState.START
             elif nextState == LexState.BLANK:
                 nextState = LexState.START
-            else:
-                word += char
 
             if nextState == LexState.START:
                 word = ""
+                if state in [
+                    LexState.WORD,
+                    LexState.XBONUM,
+                    LexState.NUM,
+                ]:
+                    if not is_space(char):
+                        string = char + string
 
             state = nextState
+            string = string[1:]
+
+        if state not in [
+            LexState.START,
+            LexState.SYMBOL,
+            LexState.WORD,
+            LexState.XBONUM,
+            LexState.NUM,
+            LexState.STR,
+            LexState.STR3,
+            LexState.COMMENT,
+            LexState.BLANK,
+        ]:
+            self.tokens.append(Token.ILLEGAL)
 
 
 if __name__ == "__main__":
     lexer = Lexer()
     with open("main.py") as f:
         for ln in f:
-            lexer.lex(ln)
-    print(lexer.tokens)
+            lexer.lex(ln + "\n")
+    last = None
+    for token in lexer.tokens:
+        if token == Token.NL:
+            if last != Token.NL:
+                print("")
+        else:
+            print(token.value, end=" ")
+        last = token
