@@ -5,23 +5,12 @@ ASSIGN -> ASSIGNCHAIN | 'id' ASSIGNOP EXP
 ASSIGNCHAIN -> 'id' 'eq' ASSIGNCHAIN | 'id' 'eq' EXP
 ASSIGNOP -> 'eq' | 'plus' 'eq' | 'min' 'eq' | 'mult' 'eq' | 'div' 'eq' | 'mod' 'eq' | 'div' 'div' 'eq' | 'mult' 'mult' 'eq' | 'amp' 'eq' | 'bor' 'eq' | 'bnot' 'eq' | 'gt' 'gt' 'eq' | 'lt' 'lt' 'eq'
 
-EXP -> PAREXP | LOGICEXP | MATHEXP | FUNCEXP | 'id' LB EXP RB | DICT | TUPLE | LIT | 'id'
-
-LIT -> REAL | 'int' | 'xbo' | 'str' | 'false' | 'true' | 'none'
-REAL -> 'int' 'dot' 'int' | 'dot' 'int'
-
-DICT -> LC DICTLIST RC
-DICTLIST -> DICTLIST DICT1 | DICT1
-DICT1 -> 'str' COLON EXP COMMA
-TUPLE -> LP ARGS RP
-ARGS -> ARGS1 | ε
-ARGS1 -> ARGS1 COMMA EXP | EXP
-
-FUNCEXP -> 'id' TUPLE
-COMMA -> 'comma' NL
+EXP -> PAREXP | DOTEXP | LOGICEXP | MATHEXP | FUNCEXP | ARR | ELMT | DICT | TUPLE | LIT | 'id'
+DOTEXP -> EXP 'dot' DOTEXPR
+DOTEXPR -> FUNCEXP | ELMT | 'id'
 
 PAREXP -> LP PAREXP1 RP
-PAREXP1 -> EXP | PARLOGICEXP | PARMATHEXP
+PAREXP1 -> EXP | PARLOGICEXP | PARMATHEXP | ε
 PARLOGICEXP -> EXP NL RELOP NL EXP | 'not' EXP | LOGICEXP
 PARMATHEXP -> EXP NL MATHOP2 NL EXP | MATHEXP
 
@@ -32,12 +21,29 @@ MATHEXP -> EXP MATHOP2 EXP | MATHOP1 EXP
 MATHOP1 -> 'plus' | 'min' | 'tilde'
 MATHOP2 -> 'mult' | 'mult' 'mult' | 'div' | 'div' 'div' | 'mod' | 'plus' | 'min' | 'lt' 'lt' | 'gt' 'gt' | 'amp' | 'bnot' | 'bor'
 
+FUNCEXP -> 'id' TUPLE
+
+ARR -> LP ARR RP | LB ARRLIST RB
+ARRLIST -> EXP | ε
+
+ELMT -> 'id' LB EXP RB
+
+DICT -> LP DICT RP | LC DICTLIST RC
+DICTLIST -> DICTLIST DICT1 | DICT1 | ε
+DICT1 -> 'str' COLON EXP COMMA
+
+TUPLE -> LP ARGS RP
+ARGS -> ARGS1 | ε
+ARGS1 -> ARGS1 COMMA EXP | EXP
+
+LIT -> REAL | 'int' | 'xbo' | 'str' | 'false' | 'true' | 'none'
+REAL -> 'int' 'dot' 'int' | 'dot' 'int'
+
 IMPORT -> 'from' FROMPKG IMPORT | 'import' PKG 'as' 'id' | 'import' PKG
 FROMPKG -> 'dot' PKG | 'dot' 'dot' PKG | 'dot'
 PKG -> 'id' 'dot' PKG | 'id'
 
 COND -> 'if' EXP COLON S CONDTAIL
-COLON -> 'colon' NL
 CONDTAIL -> 'elif' EXP COLON S CONDTAIL | CONDTAIL 'else' COLON S | ε
 
 LOOP -> 'for' EXP 'in' EXP COLON S | 'while' EXP COLON S
@@ -56,6 +62,8 @@ DEFRETT -> 'min' 'gt' 'id' | ε
 
 CLASS -> 'class' 'id' COLON S
 
+COMMA -> 'comma' NL
+COLON -> 'colon' NL
 LC -> 'lc' NL
 RC -> NL 'rc'
 LB -> 'lb' NL
