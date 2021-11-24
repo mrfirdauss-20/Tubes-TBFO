@@ -19,7 +19,7 @@ if inputFile:
     lxr.lex_file(inputFile)
     tokenValues = list(map(lambda t: t.value, lxr.tokens))
 
-    if cykParser.cykParser(tokenValues):
+    if Lexer.Token.ILLEGAL not in lxr.tokens and cykParser.cykParser(tokenValues):
         print("Accepted.")
     else:
         print("Syntax Error.")
