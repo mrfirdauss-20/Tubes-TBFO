@@ -242,16 +242,16 @@ class Cfg2Cnf:
         if len(self.prods) == 1 and len(self.prods[self.start_sym]) == 0:
             self.prods[self.start_sym] = ["ε"]
 
-    def write(self, filename: str) -> None:
+    def write(self, filename: str, quotes: bool = True) -> None:
         """Write the grammar (converted or not) to a file.
 
         Parameters
         ----------
         filename: str
             The output file path to be passed to open()
-        complete: bool, optional
-            Whether to write the terminals and variables alongside
-            productions (default is True)
+        quotes: bool, optional
+            Whether to write the terminals with quotes
+            (default is True)
 
         Returns
         -------
@@ -260,7 +260,10 @@ class Cfg2Cnf:
         with codecs.open(filename, mode="w", encoding="utf-8") as f:
             for sym, rules in self.prods.items():
                 prods_str = map(lambda p: " ".join(p), rules)
-                f.write(f"{sym} -> {' | '.join(prods_str)}\n")
+                line = f"{sym} -> {' | '.join(prods_str)}\n"
+                if not quotes:
+                    line = line.replace("'", "")
+                f.write(line)
 
     def _split_rule(self, rule: list[str]) -> tuple[list[str], list[str]]:
         """
@@ -518,13 +521,14 @@ if __name__ == "__main__":
     parser.add_argument("infile")
     parser.add_argument("outfile")
     parser.add_argument("start_symbol")
+    parser.add_argument("--quotes", action=argparse.BooleanOptionalAction)
 
     args = parser.parse_args()
     t1 = time.perf_counter()
 
     converter = Cfg2Cnf(args.infile, args.start_symbol)
     converter.convert()
-    converter.write(args.outfile)
+    converter.write(args.outfile, args.quotes)
 
     t2 = time.perf_counter()
     print(f"Done in {t2 - t1}s", end="\n\n")

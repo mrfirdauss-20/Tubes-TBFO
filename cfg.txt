@@ -61,7 +61,8 @@ DEFARG -> 'id' COLON ARGTYPE | 'id'
 ARGTYPE -> LP ARGTYPE RP | 'id' LB ARGTYPE RB | 'id'
 DEFRETT -> 'min' 'gt' 'id' | ε
 
-CLASS -> 'class' 'id' COLON S
+CLASS -> 'class' 'id' LP INHERIT RP COLON S | 'class' 'id' COLON S
+INHERIT -> INHERIT COMMA PKG | PKG | ε
 
 COMMA -> 'comma' NL
 COLON -> 'colon' NL
