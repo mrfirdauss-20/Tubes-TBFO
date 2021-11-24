@@ -76,5 +76,15 @@ def cykParser(input):
         print("Accepted")
     else:
         print("wrong syntax")
-
-    
+        for i in range(1, inputLength):
+            for j in range(inputLength-i):
+                for k in range(i):
+                    #mencari semua aturan produksi dari hasil produksi
+                    for result1 in table[i-k-1][j]:
+                        for result2 in table[k][j+i-k]:
+                            try:
+                                table[i][j] = CNF[result1+result2]
+                            except KeyError:
+                                print("Error in : "+str(input[i]))   
+                                return 0 
+        
