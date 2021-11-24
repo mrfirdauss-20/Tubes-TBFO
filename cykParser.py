@@ -70,12 +70,8 @@ def cykParser(input):
 
     for x in table:
         print(x)
-    
-    try:
-        if (len(table[-1][-1]) != 0 or len(table[-2][0]) != 0 or len(table[-3][0]) != 0):
-            return True
-    except IndexError:
-        if (len(table[-1][-1]) != 0):
-            return True
+
+    if len(table[-1][-1]) != 0:
+        return True
     
     return False
