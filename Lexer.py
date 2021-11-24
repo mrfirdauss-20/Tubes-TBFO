@@ -433,7 +433,7 @@ class Lexer:
 
     def lex_file(self, filename: str):
         with codecs.open(filename, encoding="utf-8") as f:
-            self.lex(f.read())
+            self.lex("\n".join(f.readlines()))
             return self.tokens
 
     
