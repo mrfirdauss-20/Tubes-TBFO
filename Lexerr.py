@@ -368,7 +368,7 @@ class Lexer:
 
                 if nextState != LexState.ILLEGAL or inp == LexInput.UNKNOWN:
                     break
-            print(char, inp, state, nextState)
+            # print(char, inp, state, nextState)
 
             if nextState in [
                 LexState.WORD,
@@ -437,13 +437,16 @@ class Lexer:
         ]:
             self.tokens.append(Token.ILLEGAL)
 
+
 def startLexerr(fileName):
-    lexer =Lexer()
+    lexer = Lexer()
     with open(fileName) as f:
         for ln in f:
-            lexer.lex(ln+"\n")
-        
+            lexer.lex(ln + "\n")
+
     print(lexer.tokens)
+
+
 if __name__ == "__main__":
     lexer = Lexer()
     with open("main.py") as f:
