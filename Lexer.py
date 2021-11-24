@@ -161,6 +161,7 @@ class Lexer:
         "is": Token.IS,
         "not": Token.NOT,
         "in": Token.IN,
+        "as": Token.AS,
         "with": Token.WITH,
         "break": Token.BREAK,
         "class": Token.CLASS,
