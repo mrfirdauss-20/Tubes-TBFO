@@ -64,8 +64,8 @@ def cykParser(input):
                             # print("tidak ditemukan untuk "+ result1+result2)
                             continue
 
-    # for x in table:
-    #     print(x)
+    for x in table:
+        print(x)
     
     try:
         if (len(table[-1][-1]) != 0 or len(table[-2][0]) != 0 or len(table[-3][0]) != 0):
