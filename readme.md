@@ -32,8 +32,13 @@ Prerequirement:
 
 ## Usage
 Method 1:
-  1. `cd src` jalankan main program.
-  2. Masukkan nama directory file yang akan dites.
+  1. `python3 main.py <file_cnf>` jalankan main program.
+
+Method 2:
+  1. `py main.py`
+
+  Penggunaan awalan (prefix, py atau python3) tergantung apda os yang digunakan.
+  Pada linux gunakan `python3` sedangkan mac OS dan Windows gunakan `py`
 
 
 ## Project Status
