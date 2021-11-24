@@ -127,7 +127,7 @@ class Cfg2Cnf:
 
         null_prods = []
         for sym in self.prods:
-            if ["ε"] in self.prods[sym]:
+            if ["ε"] in self.prods[sym] and sym != self.start_sym:
                 null_prods.append(sym)
 
         stack = []
@@ -174,7 +174,7 @@ class Cfg2Cnf:
 
         stack = []
         while unit_prods:
-            sym, unit_sym = unit_prods.pop(0)
+            sym, unit_sym = unit_prods.pop()
             if unit_sym in self.prods:
                 if [unit_sym] in self.prods[sym]:
                     self._remove_all(self.prods[sym], [unit_sym])
@@ -191,7 +191,6 @@ class Cfg2Cnf:
 
         # step 2c: remove useless productions
 
-        self.write("cfg_test.txt")
         self._remove_useless()
 
         # step 3: decompose terminals

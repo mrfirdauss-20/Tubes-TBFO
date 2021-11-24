@@ -1,5 +1,5 @@
-S -> STMTS | ε
-STMTS -> STMTS 'nl' STMT 'nl' | STMTS 'nl' STMT | 'nl' STMTS | STMT 'nl' | 'nl' STMT | STMT
+S -> STMTS NL | ε
+STMTS -> STMTS NL1 STMT | STMT NL
 STMT -> COND | LOOP | RAISE | RET | EXP | ASSIGN | IMPORT | CLASS | DEF | 'pass' | 'break' | 'cont'
 
 ASSIGN -> ASSIGNCHAIN | 'id' ASSIGNOP EXP
@@ -41,7 +41,7 @@ LIT -> REAL | 'int' | 'xbo' | 'str' | 'false' | 'true' | 'none'
 REAL -> 'int' 'dot' 'int' | 'dot' 'int'
 
 IMPORT -> 'from' FROMPKG IMPORT | 'import' PKG 'as' 'id' | 'import' PKG
-FROMPKG -> 'dot' PKG | 'dot' 'dot' PKG | 'dot'
+FROMPKG -> 'dot' PKG | 'dot' 'dot' PKG | PKG | 'dot'
 PKG -> 'id' 'dot' PKG | 'id'
 
 COND -> 'if' EXP COLON STMTS CONDTAIL | 'if' LIT COLON STMTS COND
@@ -71,4 +71,5 @@ LB -> 'lb' NL
 RB -> NL 'rb'
 LP -> 'lp' NL
 RP -> NL 'rp'
-NL -> 'nl' | ε
+NL -> NL 'nl' | 'nl' | ε
+NL1 -> NL1 'nl' | 'nl'
