@@ -77,7 +77,7 @@ def cykParser(input):
                 for result1 in table[i - k - 1][j]:
                     for result2 in table[k][j + i - k]:
                         try:
-                            table[i][j] = CNF[result1 + result2]
+                            table[i][j].extend(CNF[result1 + result2])
                         except KeyError:
                             # print("tidak ditemukan untuk "+ result1+result2)
                             continue
