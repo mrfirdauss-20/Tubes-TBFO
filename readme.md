@@ -23,7 +23,7 @@ List the ready features here:
 - Python CYK Parser.
 
 ## Screenshots
-![Example screenshot]()
+![Example screenshot](https://i.imgur.com/gQkFgDA.png)
 
 
 ## Setup
