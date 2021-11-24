@@ -211,7 +211,7 @@ class Lexer:
             LexInput.DQUOTE: LexState.DQUOTE1,
             LexInput.SHARP: LexState.COMMENT,
             LexInput.BACKSLASH: LexState.BACKSLASH,
-            LexInput.NEWLINE: LexState.START,
+            LexInput.NEWLINE: LexState.ILLEGAL,
             LexInput.SYMBOL: LexState.SYMBOL,
             LexInput.BLANK: LexState.BLANK,
             LexInput.UNKNOWN: LexState.START,
