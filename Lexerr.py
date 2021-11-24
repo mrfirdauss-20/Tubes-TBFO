@@ -144,7 +144,7 @@ class Token(Enum):
 
     # Special value
 
-    ILLEGAL = None
+    ILLEGAL = "illegal"
 
 
 class Lexer:
@@ -209,6 +209,7 @@ class Lexer:
             LexInput.DQUOTE: LexState.DQUOTE1,
             LexInput.SHARP: LexState.COMMENT,
             LexInput.BACKSLASH: LexState.BACKSLASH,
+            LexInput.NEWLINE: LexState.START,
             LexInput.SYMBOL: LexState.SYMBOL,
             LexInput.BLANK: LexState.BLANK,
             LexInput.UNKNOWN: LexState.START,
@@ -221,7 +222,7 @@ class Lexer:
             LexInput.BACKSLASH: LexState.BACKSLASH,
         },
         LexState.ALNUM: {
-            LexInput.ALPHA: LexState.ILLEGAL,
+            LexInput.ALPHA: LexState.ALNUM,
             LexInput.DIGIT: LexState.ALNUM,
             LexInput.SYMBOL: LexState.WORD,
             LexInput.BLANK: LexState.WORD,
@@ -367,6 +368,7 @@ class Lexer:
 
                 if nextState != LexState.ILLEGAL or inp == LexInput.UNKNOWN:
                     break
+            print(char, inp, state, nextState)
 
             if nextState in [
                 LexState.WORD,
