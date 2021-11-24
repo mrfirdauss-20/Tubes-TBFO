@@ -15,12 +15,19 @@ CNF = {}
 def getCNF(pathCNF):
     file = open(pathCNF).read()
     grammarCNF = file.split('\n')
-    lengthGrammar = len(grammarCNF) - 1
+    print(len(grammarCNF))
+    lengthGrammar = len(grammarCNF)
 
-    for rule in range (lengthGrammar):
+    for rule in range (9999999):
         #melakukan split antara lhs dengan rhs dan menghapus space antar item
-        lhs = grammarCNF[rule].split(' -> ')[0]
-        rhs = grammarCNF[rule].split(' -> ')[1]
+        try:
+            lhs = grammarCNF[rule].split(' -> ')[0]
+        except IndexError:
+            continue
+        try:
+            rhs = grammarCNF[rule].split(' -> ')[1]
+        except:
+            continue
         rhs = rhs.replace(" ", "")
         rhs = rhs.split('|')
         lengthRHS = len(rhs)
@@ -33,6 +40,7 @@ def getCNF(pathCNF):
             #jika sudah pernah muncul, maka tambahkan LHS kemunculan item dari RHS
             else:
                 CNF[rhs[item]].append(lhs)
+    # print("Panjang Grammar: "+str(lengthGrammar))
     # print(CNF)            
 
 
@@ -77,7 +85,8 @@ def cykParser(input):
     for x in table:
         print(x)
     #print(table)
-    if "S" in table[-2][0]:
+    #print(table[-1][-1])
+    if (len(table[-1][-1]) != 0):
         print("Accepted")
     else:
         print("wrong syntax")

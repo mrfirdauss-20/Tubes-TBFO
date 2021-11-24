@@ -1,5 +1,6 @@
-S -> S 'nl' S1 | S1
-S1 -> COND | LOOP | RAISE | RET | EXP | ASSIGN | IMPORT | CLASS | DEF | 'pass' | 'break' | 'cont' | 'comment'
+S -> STMTS | ε
+STMTS -> STMTS 'nl' STMT 'nl' | STMTS 'nl' STMT | 'nl' STMTS | STMT 'nl' | 'nl' STMT | STMT
+STMT -> COND | LOOP | RAISE | RET | EXP | ASSIGN | IMPORT | CLASS | DEF | 'pass' | 'break' | 'cont'
 
 ASSIGN -> ASSIGNCHAIN | 'id' ASSIGNOP EXP
 ASSIGNCHAIN -> 'id' 'eq' ASSIGNCHAIN | 'id' 'eq' EXP
@@ -43,17 +44,17 @@ IMPORT -> 'from' FROMPKG IMPORT | 'import' PKG 'as' 'id' | 'import' PKG
 FROMPKG -> 'dot' PKG | 'dot' 'dot' PKG | 'dot'
 PKG -> 'id' 'dot' PKG | 'id'
 
-COND -> 'if' EXP COLON S CONDTAIL
-CONDTAIL -> 'elif' EXP COLON S CONDTAIL | CONDTAIL 'else' COLON S | ε
+COND -> 'if' EXP COLON STMTS CONDTAIL | 'if' LIT COLON STMTS COND
+CONDTAIL -> 'elif' EXP COLON STMTS CONDTAIL | CONDTAIL 'else' COLON STMTS | ε
 
-LOOP -> 'for' EXP 'in' EXP COLON S | 'while' EXP COLON S
+LOOP -> 'for' EXP 'in' EXP COLON STMTS | 'while' EXP COLON STMTS
 
-WITH -> 'with' EXP 'as' 'id' COLON S
+WITH -> 'with' EXP 'as' 'id' COLON STMTS
 
 RAISE -> RAISE 'from' 'id' | 'raise' 'id' | 'raise' FUNCEXP
 RET -> 'return' EXP | 'return'
 
-DEF -> 'def' 'id' LP DEFARGS RP DEFRETT COLON S
+DEF -> 'def' 'id' LP DEFARGS RP DEFRETT COLON STMTS
 DEFARGS -> DEFARGS1 | ε
 DEFARGS1 -> DEFARGS1 COMMA 'id' | 'id'
 DEFARG -> 'id' COLON ARGTYPE | 'id'

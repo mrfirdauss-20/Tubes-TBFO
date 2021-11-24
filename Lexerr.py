@@ -93,6 +93,7 @@ class Token(Enum):
     WITH = "with"
     AS = "as"
     BREAK = "break"
+    PASS = "pass"
     CLASS = "class"
     CONTINUE = "cont"
     DEF = "def"
@@ -162,6 +163,7 @@ class Lexer:
         "break": Token.BREAK,
         "class": Token.CLASS,
         "continue": Token.CONTINUE,
+        "pass": Token.PASS,
         "def": Token.DEF,
         "if": Token.IF,
         "elif": Token.ELIF,
