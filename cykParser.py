@@ -8,7 +8,7 @@ CNF = {}
 def getCNF(pathCNF):
     file = open(pathCNF).read()
     grammarCNF = file.split('\n')
-    print(len(grammarCNF))
+    # print(len(grammarCNF))
     lengthGrammar = len(grammarCNF)
 
     for rule in range (9999999):
@@ -34,12 +34,12 @@ def getCNF(pathCNF):
             else:
                 CNF[rhs[item]].append(lhs)
     # print("Panjang Grammar: "+str(lengthGrammar))
-    print(CNF)            
+    #print(CNF)            
 
 
 def cykParser(input):
     inputLength = len(input)
-    print(inputLength)
+    #print(inputLength)
     # inisialisasi pada tabel CYK
     table = [[[] for j in range(i)] for i in range((inputLength), 0, -1)]
     # mengisi baris awal dengan mencari apakah ada production yang cocok dengan input
@@ -69,11 +69,9 @@ def cykParser(input):
     
     try:
         if (len(table[-1][-1]) != 0 or len(table[-2][0]) != 0 or len(table[-3][0]) != 0):
-            print("Accepted")
-        else:
-            print("wrong syntax")
+            return True
     except IndexError:
         if (len(table[-1][-1]) != 0):
-            print("Accepted")
-        else:
-            print("wrong syntax")
+            return True
+    
+    return False

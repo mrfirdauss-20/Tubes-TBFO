@@ -1,11 +1,10 @@
 def do_something(x):
     ''' This is a sample multiline comment
     '''
-    if x == 0:
+    x + 2 = 3
+    if x == 0 + 1
         return 0
     elif x + 4 == 1:
-        if True:
-            return 3
         else:
             return 2
     elif x == 32:

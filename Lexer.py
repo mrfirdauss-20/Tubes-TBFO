@@ -43,6 +43,7 @@ class LexState(Enum):
     STR = auto()
     STR3 = auto()
     SQUOTE = auto()
+    SQUOTE1 = auto()
     SQUOTE2 = auto()
     SQUOTE3 = auto()
     SQUOTE32 = auto()
@@ -209,6 +210,7 @@ class Lexer:
             LexInput.ZERO: LexState.ZERO,
             LexInput.ALPHA: LexState.ALPHA,
             LexInput.DIGIT: LexState.DIGIT,
+            LexInput.SQUOTE: LexState.SQUOTE1,
             LexInput.DQUOTE: LexState.DQUOTE1,
             LexInput.SHARP: LexState.COMMENT,
             LexInput.BACKSLASH: LexState.BACKSLASH,
@@ -296,6 +298,36 @@ class Lexer:
             LexInput.NODQUOTE: LexState.DQUOTE3,
             LexInput.NEWLINE: LexState.DQUOTE3,
             LexInput.DQUOTE: LexState.STR,
+        },
+        LexState.SQUOTE: {
+            LexInput.SQUOTE: LexState.STR,
+            LexInput.NEWLINE: LexState.ILLEGAL,
+            LexInput.NOSQUOTE: LexState.SQUOTE,
+        },
+        LexState.SQUOTE1: {
+            LexInput.SQUOTE: LexState.SQUOTE2,
+            LexInput.NEWLINE: LexState.ILLEGAL,
+            LexInput.NOSQUOTE: LexState.SQUOTE,
+        },
+        LexState.SQUOTE2: {
+            LexInput.SQUOTE: LexState.SQUOTE3,
+            LexInput.NEWLINE: LexState.ILLEGAL,
+            LexInput.NOSQUOTE: LexState.STR,
+        },
+        LexState.SQUOTE3: {
+            LexInput.NOSQUOTE: LexState.SQUOTE3,
+            LexInput.NEWLINE: LexState.SQUOTE3,
+            LexInput.SQUOTE: LexState.SQUOTE32,
+        },
+        LexState.SQUOTE32: {
+            LexInput.NOSQUOTE: LexState.SQUOTE3,
+            LexInput.NEWLINE: LexState.SQUOTE3,
+            LexInput.SQUOTE: LexState.SQUOTE31,
+        },
+        LexState.SQUOTE31: {
+            LexInput.NOSQUOTE: LexState.SQUOTE3,
+            LexInput.NEWLINE: LexState.SQUOTE3,
+            LexInput.SQUOTE: LexState.STR,
         },
         LexState.COMMENT: {
             LexInput.UNKNOWN: LexState.COMMENT,
@@ -461,7 +493,9 @@ def startLexerr(fileName):
 
 if __name__ == "__main__":
     lexer = Lexer()
-    lexer.lex_file("tes.py")
+    lexer.lex_file(input("Filename: "))
+
+    print("")
     last = None
     for token in lexer.tokens:
         if token == Token.NL:
