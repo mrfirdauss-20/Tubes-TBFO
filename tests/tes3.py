@@ -15,9 +15,8 @@ if inputFile:
 
     lxr = Lexer.Lexer()
     lxr.lex_file(inputFile)
-    tokenValues = list(map(lambda t: t.value, lxr.tokens))
     t2 = time.perf_counter()
-    print(f"Done in {t2 - t1}s", end="\n\n")
+    print("Done in {t2 - t1}s", end="\n\n")
 
 class LexState(Enum):
     START = auto()
