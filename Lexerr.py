@@ -211,6 +211,7 @@ class Lexer:
             LexInput.DQUOTE: LexState.DQUOTE1,
             LexInput.SHARP: LexState.COMMENT,
             LexInput.BACKSLASH: LexState.BACKSLASH,
+            LexInput.NEWLINE: LexState.ILLEGAL,
             LexInput.SYMBOL: LexState.SYMBOL,
             LexInput.BLANK: LexState.BLANK,
             LexInput.UNKNOWN: LexState.START,
@@ -223,7 +224,7 @@ class Lexer:
             LexInput.BACKSLASH: LexState.BACKSLASH,
         },
         LexState.ALNUM: {
-            LexInput.ALPHA: LexState.ILLEGAL,
+            LexInput.ALPHA: LexState.ALNUM,
             LexInput.DIGIT: LexState.ALNUM,
             LexInput.SYMBOL: LexState.WORD,
             LexInput.BLANK: LexState.WORD,
@@ -369,6 +370,7 @@ class Lexer:
 
                 if nextState != LexState.ILLEGAL or inp == LexInput.UNKNOWN:
                     break
+            # print(char, inp, state, nextState)
 
             if nextState in [
                 LexState.WORD,
@@ -437,13 +439,16 @@ class Lexer:
         ]:
             self.tokens.append(Token.ILLEGAL)
 
+
 def startLexerr(fileName):
-    lexer =Lexer()
+    lexer = Lexer()
     with open(fileName) as f:
         for ln in f:
-            lexer.lex(ln+"\n")
-        
+            lexer.lex(ln + "\n")
+
     print(lexer.tokens)
+
+
 if __name__ == "__main__":
     lexer = Lexer()
     with open("main.py") as f:
